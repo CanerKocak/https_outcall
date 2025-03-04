@@ -60,14 +60,14 @@ cat $NETPLAN_FILE
 echo "Applying netplan configuration..."
 sudo netplan apply
 
-# Step 2: Kill any processes using port 8080 and reset the socket
-echo "Killing any processes using port 8080..."
-sudo fuser -k 8080/tcp || true
-sudo fuser -k 8080/tcp6 || true
+# Step 2: Kill any processes using port 8081 and reset the socket
+echo "Killing any processes using port 8081..."
+sudo fuser -k 8081/tcp || true
+sudo fuser -k 8081/tcp6 || true
 
 echo "Resetting socket..."
-sudo ss -K '( sport = :8080 )' || true
-sudo ss -K '( dport = :8080 )' || true
+sudo ss -K '( sport = :8081 )' || true
+sudo ss -K '( dport = :8081 )' || true
 
 # Step 3: Update systemd service file
 echo "Updating systemd service file..."
@@ -83,7 +83,6 @@ WorkingDirectory=/root/https_outcall
 ExecStart=/root/https_outcall/target/release/https_outcall
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=60
 StartLimitBurst=3
 Environment=RUST_LOG=info
 
@@ -100,7 +99,7 @@ sudo ufw --force reset
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 sudo ufw allow 22/tcp comment 'Allow SSH traffic'
-sudo ufw allow 8080/tcp comment 'Allow HTTP traffic for https_outcall'
+sudo ufw allow 8081/tcp comment 'Allow HTTP traffic for https_outcall'
 sudo ufw --force enable
 
 # Step 5: Restart the service
@@ -130,18 +129,18 @@ ip -6 route show
 # Step 8: Test connectivity
 echo "Testing connectivity..."
 echo "IPv4 localhost:"
-curl -s -m 5 http://127.0.0.1:8080 || echo "Failed to connect to IPv4 localhost"
+curl -s -m 5 http://127.0.0.1:8081 || echo "Failed to connect to IPv4 localhost"
 echo "IPv6 localhost:"
-curl -6 -s -m 5 http://[::1]:8080 || echo "Failed to connect to IPv6 localhost"
+curl -6 -s -m 5 http://[::1]:8081 || echo "Failed to connect to IPv6 localhost"
 echo "IPv4 public:"
-curl -s -m 5 http://134.209.193.115:8080 || echo "Failed to connect to IPv4 public"
+curl -s -m 5 http://134.209.193.115:8081 || echo "Failed to connect to IPv4 public"
 echo "IPv6 public:"
-curl -6 -s -m 5 http://[2a03:b0c0:2:f0::5786:1]:8080 || echo "Failed to connect to IPv6 public"
+curl -6 -s -m 5 http://[2a03:b0c0:2:f0::5786:1]:8081 || echo "Failed to connect to IPv6 public"
 
 echo "===== Fix complete! ====="
 echo "Your application should now be accessible at:"
-echo "  - http://134.209.193.115:8080 (IPv4)"
-echo "  - http://[2a03:b0c0:2:f0::5786:1]:8080 (IPv6)"
+echo "  - http://134.209.193.115:8081 (IPv4)"
+echo "  - http://[2a03:b0c0:2:f0::5786:1]:8081 (IPv6)"
 echo ""
 echo "To check the service status: sudo systemctl status https-outcall.service"
 echo "To view logs: sudo journalctl -u https-outcall.service -f" 
