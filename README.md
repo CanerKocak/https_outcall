@@ -1,6 +1,14 @@
 # HTTPS Outcall Server
 
-A simple Actix Web server designed to be compatible with Internet Computer canister HTTPS outcalls.
+A simple Actix Web server designed to be compatible with Internet Computer canister HTTPS outcalls. This server provides a lightweight HTTP endpoint that can be called from Internet Computer canisters using the HTTPS outcall feature.
+
+## Purpose
+
+The Internet Computer Protocol requires IPv6 connectivity for its canister HTTPS outcalls. This server is specifically configured to:
+
+1. Bind to IPv6 addresses to ensure compatibility with IC canisters
+2. Provide simple endpoints for testing and development
+3. Run reliably as a system service
 
 ## Features
 
