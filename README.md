@@ -1,118 +1,94 @@
-# HTTPS Outcall
+# HTTPS Outcall Server
 
-A simple Actix Web server that binds to both IPv4 and IPv6 addresses.
+A simple Actix Web server designed to be compatible with Internet Computer canister HTTPS outcalls.
 
-## Deployment on Ubuntu 24.10
+## Features
+
+- Binds to IPv6 addresses for compatibility with IC canister HTTPS outcalls
+- Provides a simple API with GET and POST endpoints
+- Automatically starts on system boot via systemd service
+
+## Local Development
 
 ### Prerequisites
 
-- Ubuntu 24.10 x64
-- Internet connection
-- Sudo privileges
+- Rust 1.81 or later
+- Basic build tools (build-essential, pkg-config, libssl-dev)
 
-### Automatic Deployment
+### Setup
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/yourusername/https_outcall.git
-   cd https_outcall
-   ```
+Run the setup script to install all dependencies:
 
+```bash
+./setup.sh
+```
+
+### Building
+
+```bash
+cargo build --release
+```
+
+### Running Locally
+
+```bash
+cargo run --release
+```
+
+The server will start on `[::]:8080` (all IPv6 interfaces, port 8080).
+
+## Deployment
+
+### Initial Deployment
+
+To deploy the application to a server:
+
+1. Clone this repository on your server
 2. Run the deployment script:
-   ```
-   ./deploy.sh
-   ```
+
+```bash
+./deploy.sh
+```
 
 This will:
-- Install all dependencies (Rust, Git, etc.)
+- Install all dependencies
 - Build the application
 - Configure the firewall
-- Set up and start the systemd service
+- Set up the systemd service
+- Start the application
 
-### Manual Deployment
+### Updating the Deployed Application
 
-1. Install dependencies:
-   ```
-   ./setup.sh
-   ```
+After making changes to the codebase:
 
-2. Build the application:
-   ```
-   cargo build --release
-   ```
+1. Commit and push your changes to the repository
+2. On the server, run:
 
-3. Configure the firewall:
-   ```
-   sudo ufw allow 8080/tcp
-   sudo ufw allow 8080/tcp6
-   ```
+```bash
+/root/update_and_restart.sh
+```
 
-4. Set up the systemd service:
-   ```
-   sudo cp https-outcall.service /etc/systemd/system/
-   sudo systemctl daemon-reload
-   sudo systemctl enable https-outcall.service
-   sudo systemctl start https-outcall.service
-   ```
+This will:
+- Pull the latest changes
+- Rebuild the application
+- Restart the service
 
-## Usage
+### Checking Server Status
 
-Once deployed, the application will be accessible at:
-- IPv4: http://24.144.76.120:8080 or http://134.209.193.115:8080
-- IPv6: http://[2a03:b0c0:2:f0::5786:1]:8080
+To verify the server is running correctly:
 
-Available endpoints:
-- `GET /` - Returns "Hello world!"
-- `POST /echo` - Echoes back the request body
-- `GET /hey` - Returns "Hey there!"
+```bash
+./check_server.sh
+```
 
-## Service Management
+This will test connectivity over both IPv4 and IPv6.
 
-- Check service status:
-  ```
-  sudo systemctl status https-outcall.service
-  ```
+## API Endpoints
 
-- View logs:
-  ```
-  sudo journalctl -u https-outcall.service -f
-  ```
+- `GET /`: Returns "Hello world!"
+- `POST /echo`: Echoes back the request body
+- `GET /hey`: Returns "Hey there!"
 
-- Restart service:
-  ```
-  sudo systemctl restart https-outcall.service
-  ```
+## IPv6 Compatibility
 
-## IPv6 Configuration
-
-IPv6 has been successfully enabled on your DigitalOcean droplet with the following details:
-
-- IPv6 Address: 2a03:b0c0:2:f0::5786:1
-- IPv6 Gateway: 2a03:b0c0:2:f0::1
-- Address Range: 2a03:b0c0:2:f0::5786:0 - 2a03:b0c0:2:f0::5786:f
-
-## Verifying IPv6 Connectivity
-
-To verify that your server is listening on IPv6:
-
-1. On the server, run:
-   ```
-   netstat -tuln | grep 8080
-   ```
-   
-   You should see entries for both IPv4 (0.0.0.0:8080) and IPv6 ([::]:8080)
-
-2. Test IPv6 connectivity from the server itself:
-   ```
-   curl -6 http://[::1]:8080
-   ```
-
-3. Test with your public IPv6 address:
-   ```
-   curl -6 http://[2a03:b0c0:2:f0::5786:1]:8080
-   ```
-
-4. From another machine with IPv6 connectivity, try accessing your server:
-   ```
-   curl -6 http://[2a03:b0c0:2:f0::5786:1]:8080
-   ```
+This server is specifically configured to bind to IPv6 addresses to ensure compatibility with Internet Computer canister HTTPS outcalls, which require IPv6 connectivity. Thanks to IPv6 dual-stack compatibility, the server remains accessible via both IPv4 and IPv6 addresses.
