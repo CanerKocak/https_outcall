@@ -6,10 +6,14 @@ set -e
 echo "===== Deploying https_outcall application ====="
 
 # Install dependencies if not already done
-# if [ ! -f "/etc/systemd/system/https-outcall.service" ]; then
-#     echo "Running setup script..."
-#     ./setup.sh
-# fi
+if [ ! -f "/etc/systemd/system/https-outcall.service" ]; then
+    echo "Running setup script..."
+    ./setup.sh
+fi
+
+# Source Rust environment
+echo "Setting up Rust environment..."
+. "$HOME/.cargo/env"
 
 # Build the application
 echo "Building application..."

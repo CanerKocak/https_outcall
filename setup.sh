@@ -23,14 +23,17 @@ sudo apt-get install -y \
 if ! command -v rustc &> /dev/null; then
     echo "Installing Rust..."
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    source "$HOME/.cargo/env"
+    # Source the environment directly instead of using source command
+    . "$HOME/.cargo/env"
 else
     echo "Rust is already installed. Updating..."
+    . "$HOME/.cargo/env"
     rustup update
 fi
 
 # Install specific Rust version (1.81)
 echo "Installing Rust 1.81..."
+. "$HOME/.cargo/env"
 rustup install 1.81
 rustup default 1.81
 
