@@ -9,6 +9,7 @@ WorkingDirectory=/root/https_outcall
 ExecStart=/root/https_outcall/target/release/https_outcall
 Restart=on-failure
 RestartSec=5
+StartLimitBurst=3
 Environment=RUST_LOG=info
 
 [Install]
