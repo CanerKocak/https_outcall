@@ -83,6 +83,7 @@ WorkingDirectory=/root/https_outcall
 ExecStart=/root/https_outcall/target/release/https_outcall
 Restart=on-failure
 RestartSec=5
+StartLimitIntervalSec=60
 StartLimitBurst=3
 Environment=RUST_LOG=info
 
@@ -108,6 +109,13 @@ sudo systemctl stop https-outcall.service || true
 
 echo "Waiting for port to be released..."
 sleep 5
+
+# Pull latest changes and rebuild
+echo "Pulling latest changes and rebuilding..."
+cd /root/https_outcall
+git pull
+. /root/.cargo/env
+cargo build --release
 
 echo "Starting the service..."
 sudo systemctl start https-outcall.service
