@@ -25,6 +25,7 @@ async fn main() -> std::io::Result<()> {
             .route("/hey", web::get().to(manual_hello))
     })
     .bind(("0.0.0.0", 8080))? // Bind to all IPv4 addresses
+    // .bind(("::", 8080))? // Bind to all IPv6 addresses - commented out for testing
     .run()
     .await
 }
