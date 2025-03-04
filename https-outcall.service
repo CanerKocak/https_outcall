@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=ubuntu
-WorkingDirectory=/home/ubuntu/https_outcall
-ExecStart=/home/ubuntu/.cargo/bin/cargo run --release
+User=root
+WorkingDirectory=/root/https_outcall
+ExecStart=/root/https_outcall/target/release/https_outcall
 Restart=on-failure
 RestartSec=5
 Environment=RUST_LOG=info

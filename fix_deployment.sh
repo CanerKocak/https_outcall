@@ -3,37 +3,42 @@
 # Exit on error
 set -e
 
-echo "===== Deploying https_outcall application ====="
+echo "===== Fixing deployment issues for https_outcall application ====="
 
-# Install dependencies if not already done
-if [ ! -f "/etc/systemd/system/https-outcall.service" ]; then
-    echo "Running setup script..."
-    ./setup.sh
-fi
+# Ensure scripts are executable
+chmod +x deploy.sh
+chmod +x setup.sh
+chmod +x check_server.sh
 
-# Source Rust environment
-echo "Setting up Rust environment..."
-. "$HOME/.cargo/env"
-
-# Build the application
-echo "Building application..."
-cargo build --release
-
-# Set up firewall
-echo "Configuring firewall..."
+# Fix UFW configuration
+echo "Fixing firewall configuration..."
 sudo ufw allow 8080/tcp comment 'Allow HTTP traffic for https_outcall (IPv4)'
 sudo ufw allow 8080/tcp6 comment 'Allow HTTP traffic for https_outcall (IPv6)'
 sudo ufw status verbose
 
-# Copy systemd service file
+# Build the application
+echo "Building application..."
+. "$HOME/.cargo/env"
+cargo build --release
+
+# Set up systemd service
 echo "Setting up systemd service..."
 sudo cp https-outcall.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable https-outcall.service
 sudo systemctl restart https-outcall.service
-sudo systemctl status https-outcall.service
+sudo systemctl status https-outcall.service || true
 
-echo "===== Deployment complete! ====="
+# Check if the service is running
+echo "Checking if the service is running..."
+if sudo systemctl is-active --quiet https-outcall.service; then
+    echo "Service is running successfully!"
+else
+    echo "Service failed to start. Checking logs..."
+    sudo journalctl -u https-outcall.service -n 50
+fi
+
+echo "===== Deployment fixes complete! ====="
 echo "Your application should now be accessible at:"
 echo "  - http://24.144.76.120:8080 (Reserved IPv4)"
 echo "  - http://134.209.193.115:8080 (Public IPv4)"
