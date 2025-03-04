@@ -1,20 +1,34 @@
-# HTTPS Outcall Server
+# HTTPS Outcall Server with ICP Canister Registry
 
-A simple Actix Web server designed to be compatible with Internet Computer canister HTTPS outcalls. This server provides a lightweight HTTP endpoint that can be called from Internet Computer canisters using the HTTPS outcall feature.
+A server designed to be compatible with Internet Computer canister HTTPS outcalls, featuring a comprehensive registry for tracking and managing ICP canisters, including tokens and miners.
 
 ## Purpose
 
 The Internet Computer Protocol requires IPv6 connectivity for its canister HTTPS outcalls. This server is specifically configured to:
 
 1. Bind to IPv6 addresses to ensure compatibility with IC canisters
-2. Provide simple endpoints for testing and development
-3. Run reliably as a system service
+2. Provide a registry for tracking ICP canisters (tokens, miners, wallets)
+3. Automatically update canister information by calling their methods
+4. Offer a REST API for managing and querying the registry
+5. Run reliably as a system service
 
 ## Features
 
 - Binds to IPv6 addresses for compatibility with IC canister HTTPS outcalls
-- Provides a simple API with GET and POST endpoints
+- Persistent SQLite database for storing canister information
+- Background job system for periodically updating canister information
+- REST API for managing and querying the registry
+- Support for different canister types (tokens, miners, wallets)
 - Automatically starts on system boot via systemd service
+
+## Registry Features
+
+- **Canister Management**: Register, update, and delete canisters
+- **Token Tracking**: Automatically fetch and store token information
+- **Miner Tracking**: Automatically fetch and store miner information and stats
+- **Module Hash Tracking**: Track module hashes for canisters
+- **Periodic Updates**: Automatically update canister information every minute
+- **Manual Refresh**: Trigger manual updates via API
 
 ## Local Development
 
@@ -73,7 +87,7 @@ After making changes to the codebase:
 2. On the server, run:
 
 ```bash
-/root/update_and_restart.sh
+/root/https_outcall/update_and_restart.sh
 ```
 
 This will:
@@ -93,9 +107,44 @@ This will test connectivity over both IPv4 and IPv6.
 
 ## API Endpoints
 
-- `GET /`: Returns "Hello world!"
-- `POST /echo`: Echoes back the request body
-- `GET /hey`: Returns "Hey there!"
+### Canister Management
+
+- `GET /canisters`: List all registered canisters
+- `POST /canisters`: Register a new canister
+- `GET /canisters/{canister_id}`: Get details for a specific canister
+- `PUT /canisters/{canister_id}`: Update a canister
+- `DELETE /canisters/{canister_id}`: Delete a canister
+
+### Token Management
+
+- `GET /tokens`: List all tokens with their information
+- `GET /tokens/{canister_id}`: Get details for a specific token
+
+### Miner Management
+
+- `GET /miners`: List all miners with their information
+- `GET /miners/{canister_id}`: Get details for a specific miner
+- `GET /miners/{canister_id}/stats`: Get mining stats for a specific miner
+- `GET /miners/by-token/{token_canister_id}`: Get miners mining for a specific token
+
+### Module Hash Management
+
+- `GET /module-hashes`: List all module hashes
+- `POST /module-hashes`: Add a new module hash
+
+### System Management
+
+- `GET /system/status`: Get system status
+- `POST /system/refresh`: Trigger a manual refresh of all canister information
+
+## Storage Implementation
+
+The server uses SQLite for persistent storage:
+
+- **High Performance**: Optimized for fast read and write operations
+- **Persistence**: Data is stored on disk and persists across reboots
+- **Reliability**: Transactions ensure data integrity
+- **Simplicity**: No external database service required
 
 ## IPv6 Compatibility
 
