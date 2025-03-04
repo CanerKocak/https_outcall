@@ -16,7 +16,7 @@ async fn manual_hello() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("Starting server on 0.0.0.0:8080 and [::]:8080");
+    println!("Starting server on 0.0.0.0:8082");
     
     HttpServer::new(|| {
         App::new()
@@ -24,8 +24,7 @@ async fn main() -> std::io::Result<()> {
             .service(echo)
             .route("/hey", web::get().to(manual_hello))
     })
-    .bind(("0.0.0.0", 8080))? // Bind to all IPv4 addresses
-    .bind(("::", 8080))? // Bind to all IPv6 addresses
+    .bind(("0.0.0.0", 8082))? // Bind to all IPv4 addresses
     .run()
     .await
 }
