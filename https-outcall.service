@@ -1,0 +1,15 @@
+[Unit]
+Description=HTTPS Outcall Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/https_outcall
+ExecStart=/home/ubuntu/.cargo/bin/cargo run --release
+Restart=on-failure
+RestartSec=5
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=multi-user.target 
