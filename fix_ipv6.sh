@@ -14,10 +14,45 @@ echo "Found netplan file: $NETPLAN_FILE"
 sudo cp $NETPLAN_FILE ${NETPLAN_FILE}.bak
 echo "Backed up original netplan file to ${NETPLAN_FILE}.bak"
 
-# Update the netplan configuration
-sudo sed -i '/eth0:/,/routes:/ s/addresses:/addresses:\n      - "2a03:b0c0:2:f0::5786:1\/64"  # Added IPv6 address/' $NETPLAN_FILE
-sudo sed -i '/routes:/,/eth1:/ s/via: "134.209.192.1"/via: "134.209.192.1"\n      - to: "::\/0"  # Added IPv6 default route\n        via: "2a03:b0c0:2:f0::1"  # IPv6 gateway/' $NETPLAN_FILE
+# Create a new netplan configuration file with IPv6 support
+cat > /tmp/50-cloud-init.yaml << 'EOF'
+network:
+  version: 2
+  ethernets:
+    eth0:
+      match:
+        macaddress: "1a:f1:df:18:7c:cf"
+      addresses:
+      - "134.209.193.115/20"
+      - "10.18.0.5/16"
+      - "2a03:b0c0:2:f0::5786:1/64"
+      nameservers:
+        addresses:
+        - 67.207.67.2
+        - 67.207.67.3
+        search: []
+      set-name: "eth0"
+      mtu: 1500
+      routes:
+      - to: "0.0.0.0/0"
+        via: "134.209.192.1"
+      - to: "::/0"
+        via: "2a03:b0c0:2:f0::1"
+    eth1:
+      match:
+        macaddress: "ca:6d:14:56:31:9a"
+      addresses:
+      - "10.110.0.2/20"
+      nameservers:
+        addresses:
+        - 67.207.67.2
+        - 67.207.67.3
+        search: []
+      set-name: "eth1"
+      mtu: 1500
+EOF
 
+sudo cp /tmp/50-cloud-init.yaml $NETPLAN_FILE
 echo "Updated netplan configuration:"
 cat $NETPLAN_FILE
 
