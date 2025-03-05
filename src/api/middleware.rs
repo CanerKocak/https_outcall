@@ -1,3 +1,7 @@
+// NOTE: This middleware is not currently used. We're using a simpler approach with
+// direct authentication in the handler functions. This file is kept for reference
+// in case we want to switch to middleware-based authentication in the future.
+
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage, HttpResponse,

@@ -39,6 +39,15 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.route("/admin/module-hashes", web::post().to(admin::add_verified_module_hash));
     cfg.route("/admin/module-hashes/{hash}", web::delete().to(admin::remove_verified_module_hash));
     
+    // Admin canister management routes
+    cfg.route("/admin/canisters/{canister_id}", web::delete().to(admin::delete_canister));
+    cfg.route("/admin/tokens/{canister_id}", web::delete().to(admin::delete_token));
+    cfg.route("/admin/miners/{canister_id}", web::delete().to(admin::delete_miner));
+    
+    // Admin module hash management routes
+    cfg.route("/admin/canisters/module-hashes", web::get().to(admin::get_all_module_hashes));
+    cfg.route("/admin/canisters/{canister_id}/module-hash", web::put().to(admin::set_module_hash));
+    
     // System routes
     cfg.service(
         web::scope("/system")

@@ -26,8 +26,8 @@ pub struct UpdateCanisterRequest {
 
 #[derive(Deserialize)]
 pub struct ModuleHashRequest {
-    hash: String,
-    description: String,
+    pub hash: String,
+    pub description: String,
 }
 
 /// Get all canisters
