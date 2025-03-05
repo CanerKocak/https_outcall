@@ -68,9 +68,46 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         [],
     )?;
 
+    // Create verified_module_hashes table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS verified_module_hashes (
+            id TEXT PRIMARY KEY,
+            hash TEXT NOT NULL UNIQUE,
+            description TEXT NOT NULL,
+            canister_type TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at INTEGER NOT NULL,
+            last_updated INTEGER NOT NULL
+        )",
+        [],
+    )?;
+
+    // Create admins table for authentication
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS admins (
+            id TEXT PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            api_key TEXT NOT NULL UNIQUE,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at INTEGER NOT NULL,
+            last_updated INTEGER NOT NULL
+        )",
+        [],
+    )?;
+
     // Create indices for faster lookups
     conn.execute("CREATE INDEX IF NOT EXISTS idx_canisters_type ON canisters (type)", [])?;
     conn.execute("CREATE INDEX IF NOT EXISTS idx_canisters_principal ON canisters (principal)", [])?;
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_verified_module_hashes_hash ON verified_module_hashes (hash)", [])?;
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_verified_module_hashes_type ON verified_module_hashes (canister_type)", [])?;
+    
+    // Insert default verified module hash
+    conn.execute(
+        "INSERT OR IGNORE INTO verified_module_hashes (id, hash, description, canister_type, is_active, created_at, last_updated)
+         VALUES ('default-hash', '5471eb4e9e70f245d8db1a1673d43ab5ff9443c6d1588f5bdf052bdc7e88f0a5', 'Default verified token hash', 'token', 1, strftime('%s','now'), strftime('%s','now'))",
+        [],
+    )?;
     
     info!("Database schema initialized successfully");
     Ok(())

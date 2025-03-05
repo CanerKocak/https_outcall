@@ -140,4 +140,87 @@ pub async fn generate_interfaces(
             )
         }
     }
+}
+
+/// Get aggregate statistics (token and miner counts, totals)
+pub async fn get_statistics(db_pool: web::Data<DbPool>) -> impl Responder {
+    info!("API: Get aggregate statistics");
+    
+    let conn = match db_pool.get() {
+        Ok(conn) => conn,
+        Err(e) => {
+            error!("Failed to get database connection: {}", e);
+            return HttpResponse::InternalServerError().json(
+                ApiResponse::<HashMap<String, i64>>::error(&format!("Database error: {}", e))
+            );
+        }
+    };
+    
+    // Create stats object
+    let mut stats = HashMap::new();
+    
+    // Get total token count
+    match conn.query_row(
+        "SELECT COUNT(*) FROM token_info",
+        [],
+        |row| row.get::<_, i64>(0),
+    ) {
+        Ok(count) => {
+            stats.insert("token_count".to_string(), count);
+        },
+        Err(e) => {
+            error!("Failed to get token count: {}", e);
+            stats.insert("token_count".to_string(), 0);
+        }
+    }
+    
+    // Get total miner count
+    match conn.query_row(
+        "SELECT COUNT(*) FROM miner_info",
+        [],
+        |row| row.get::<_, i64>(0),
+    ) {
+        Ok(count) => {
+            stats.insert("miner_count".to_string(), count);
+        },
+        Err(e) => {
+            error!("Failed to get miner count: {}", e);
+            stats.insert("miner_count".to_string(), 0);
+        }
+    }
+    
+    // Get total blocks mined
+    match conn.query_row(
+        "SELECT SUM(blocks_mined) FROM mining_stats",
+        [],
+        |row| row.get::<_, i64>(0),
+    ) {
+        Ok(count) => {
+            stats.insert("blocks_mined".to_string(), count);
+        },
+        Err(e) => {
+            error!("Failed to get blocks mined: {}", e);
+            stats.insert("blocks_mined".to_string(), 0);
+        }
+    }
+    
+    // Get total rewards
+    match conn.query_row(
+        "SELECT SUM(total_rewards) FROM mining_stats",
+        [],
+        |row| row.get::<_, i64>(0),
+    ) {
+        Ok(count) => {
+            stats.insert("total_rewards".to_string(), count);
+        },
+        Err(e) => {
+            error!("Failed to get total rewards: {}", e);
+            stats.insert("total_rewards".to_string(), 0);
+        }
+    }
+    
+    // Return stats
+    HttpResponse::Ok().json(
+        ApiResponse::success(stats, "Aggregate statistics retrieved successfully")
+    )
 } 

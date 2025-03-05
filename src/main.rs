@@ -9,6 +9,8 @@ mod ic;
 mod api;
 mod jobs;
 
+use db::models::admin::Admin;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Initialize logger
@@ -30,6 +32,20 @@ async fn main() -> std::io::Result<()> {
     
     // Create shared database pool
     let db_pool = Arc::new(db_pool);
+    
+    // Create default admin account if none exists
+    match db_pool.get() {
+        Ok(conn) => {
+            if let Err(e) = Admin::create_admin_if_none_exists(&conn, "admin", "admin123") {
+                error!("Failed to create default admin: {}", e);
+            } else {
+                info!("Checked/created default admin account");
+            }
+        },
+        Err(e) => {
+            error!("Failed to get database connection: {}", e);
+        }
+    }
     
     // Start background job scheduler
     let scheduler_db_pool = db_pool.clone();

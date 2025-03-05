@@ -2,6 +2,7 @@ pub mod canister;
 pub mod token;
 pub mod miner;
 pub mod system;
+pub mod admin;
 
 use serde::{Deserialize, Serialize};
 
