@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mining WebSocket Test</title>
+    <title>Canister Registry Test</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,7 +14,7 @@
             color: #f0f0f0;
         }
         
-        h1 {
+        h1, h2 {
             color: #4CAF50;
             text-align: center;
         }
@@ -24,6 +24,7 @@
             margin: 10px 0;
             border-radius: 5px;
             font-weight: bold;
+            text-align: center;
         }
         
         .connected {
@@ -36,14 +37,14 @@
             color: white;
         }
         
-        .events-container {
+        .container {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             margin-top: 20px;
         }
         
-        .event-card {
+        .card {
             flex: 1;
             min-width: 300px;
             border: 1px solid #444;
@@ -51,119 +52,33 @@
             padding: 15px;
             background-color: #2a2a2a;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
         }
         
-        .event-card h3 {
+        .card h3 {
             margin-top: 0;
             color: #4CAF50;
             border-bottom: 1px solid #444;
             padding-bottom: 10px;
         }
         
-        .event-list {
-            max-height: 300px;
-            overflow-y: auto;
-            padding-right: 10px;
+        .form-group {
+            margin-bottom: 15px;
         }
         
-        .event-item {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            background-color: #333;
-            border-left: 4px solid #4CAF50;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        .event-item.token-connected {
-            border-left-color: #2196F3;
-        }
-        
-        .event-item.mining-started {
-            border-left-color: #FF9800;
-        }
-        
-        .event-item.solution-found {
-            border-left-color: #f44336;
-            animation: pulse 1s infinite;
-        }
-        
-        .event-time {
-            font-size: 0.8em;
-            color: #aaa;
+        label {
+            display: block;
             margin-bottom: 5px;
+            color: #ccc;
         }
         
-        .event-details {
-            margin-top: 5px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            background-color: #222;
-            padding: 8px;
+        input, select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: #333;
+            border: 1px solid #444;
+            color: #f0f0f0;
             border-radius: 4px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-        
-        .mining-visualization {
-            height: 200px;
-            background-color: #222;
-            border-radius: 8px;
-            margin: 20px 0;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .miner {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: #4CAF50;
-            border-radius: 50%;
-            transition: all 0.5s ease;
-        }
-        
-        .block {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background-color: #FFD700;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .flash {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 215, 0, 0.3);
-            opacity: 0;
-            pointer-events: none;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.03); }
-            100% { transform: scale(1); }
-        }
-        
-        .controls {
-            margin: 20px 0;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
         }
         
         button {
@@ -175,6 +90,7 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s;
+            margin-top: 10px;
         }
         
         button:hover {
@@ -186,12 +102,76 @@
             cursor: not-allowed;
         }
         
-        #clearEvents {
-            background-color: #f44336;
+        .notification {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            animation: fadeIn 0.5s ease;
         }
         
-        #clearEvents:hover {
-            background-color: #d32f2f;
+        .success {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .error {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .info {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .canister-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .canister-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #333;
+            border-left: 4px solid #4CAF50;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .canister-item.token {
+            border-left-color: #2196F3;
+        }
+        
+        .canister-item.miner {
+            border-left-color: #FF9800;
+        }
+        
+        .canister-item.wallet {
+            border-left-color: #9C27B0;
+        }
+        
+        .canister-details {
+            margin-top: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #222;
+            padding: 8px;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
         }
         
         .connection-info {
@@ -201,77 +181,203 @@
             border-radius: 8px;
         }
         
-        input[type="text"] {
-            padding: 10px;
-            width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-            background-color: #333;
-            border: 1px solid #444;
-            color: #f0f0f0;
+        .notification-area {
+            margin: 20px 0;
+        }
+
+        .environment-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .environment-btn {
+            padding: 10px 15px;
+            margin: 0 5px;
+            border: none;
             border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .environment-btn.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .environment-btn:not(.active) {
+            background-color: #555;
+            color: #ddd;
+        }
+
+        .event-log {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #222;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+
+        .event-item {
+            padding: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-time {
+            color: #888;
+            font-size: 0.8em;
+        }
+
+        .event-type {
+            color: #4CAF50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .event-data {
+            color: #ddd;
         }
     </style>
 </head>
 <body>
-    <h1>Mining WebSocket Test</h1>
+    <h1>Canister Registry Test</h1>
+    
+    <div class="environment-selector">
+        <button id="localEnv" class="environment-btn active">Local Environment</button>
+        <button id="prodEnv" class="environment-btn">Production Environment</button>
+    </div>
     
     <div class="connection-info">
         <input type="text" id="wsUrl" value="ws://localhost:8080/ws" placeholder="WebSocket URL">
+        <input type="text" id="apiUrl" value="http://localhost:8080" placeholder="API URL">
         <div id="connectionStatus" class="status disconnected">Disconnected</div>
     </div>
     
     <div class="controls">
-        <button id="connect">Connect</button>
+        <button id="connect">Connect WebSocket</button>
         <button id="disconnect" disabled>Disconnect</button>
+    </div>
+    
+    <div class="notification-area" id="notificationArea"></div>
+    
+    <div class="container">
+        <div class="card">
+            <h3>Register Canister</h3>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="principal">Principal ID:</label>
+                    <input type="text" id="principal" placeholder="Enter principal ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="canisterId">Canister ID:</label>
+                    <input type="text" id="canisterId" placeholder="Enter canister ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="canisterType">Canister Type:</label>
+                    <select id="canisterType" required>
+                        <option value="token">Token</option>
+                        <option value="miner">Miner</option>
+                        <option value="wallet">Wallet</option>
+                    </select>
+                </div>
+                <button type="submit">Register Canister</button>
+            </form>
+        </div>
+        
+        <div class="card">
+            <h3>Registered Canisters</h3>
+            <button id="refreshCanisters">Refresh List</button>
+            <div class="canister-list" id="canisterList">
+                <div style="text-align: center; color: #888;">No canisters loaded yet</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>WebSocket Event Log</h3>
         <button id="clearEvents">Clear Events</button>
-    </div>
-    
-    <div class="mining-visualization">
-        <div class="flash" id="flash"></div>
-        <!-- Miners and blocks will be added dynamically -->
-    </div>
-    
-    <div class="events-container">
-        <div class="event-card">
-            <h3>Token Connected Events</h3>
-            <div class="event-list" id="tokenConnectedEvents"></div>
-        </div>
-        
-        <div class="event-card">
-            <h3>Mining Started Events</h3>
-            <div class="event-list" id="miningStartedEvents"></div>
-        </div>
-        
-        <div class="event-card">
-            <h3>Solution Found Events</h3>
-            <div class="event-list" id="solutionFoundEvents"></div>
+        <div class="event-log" id="eventLog">
+            <div style="text-align: center; color: #888;">No events received yet</div>
         </div>
     </div>
     
     <script>
         let socket = null;
-        let miners = {};
-        let blocks = {};
-        let blockHeight = 0;
+        let currentEnvironment = 'local';
+        
+        // Environment URLs
+        const environments = {
+            local: {
+                ws: 'ws://localhost:8080/ws',
+                api: 'http://localhost:8080'
+            },
+            production: {
+                ws: 'ws://134.209.193.115:8080/ws',
+                api: 'http://134.209.193.115:8080'
+            }
+        };
         
         // DOM elements
         const connectionStatus = document.getElementById('connectionStatus');
         const wsUrlInput = document.getElementById('wsUrl');
+        const apiUrlInput = document.getElementById('apiUrl');
         const connectBtn = document.getElementById('connect');
         const disconnectBtn = document.getElementById('disconnect');
+        const registerForm = document.getElementById('registerForm');
+        const refreshCanistersBtn = document.getElementById('refreshCanisters');
+        const canisterList = document.getElementById('canisterList');
+        const notificationArea = document.getElementById('notificationArea');
+        const eventLog = document.getElementById('eventLog');
         const clearEventsBtn = document.getElementById('clearEvents');
-        const tokenConnectedEvents = document.getElementById('tokenConnectedEvents');
-        const miningStartedEvents = document.getElementById('miningStartedEvents');
-        const solutionFoundEvents = document.getElementById('solutionFoundEvents');
-        const visualization = document.querySelector('.mining-visualization');
-        const flash = document.getElementById('flash');
+        const localEnvBtn = document.getElementById('localEnv');
+        const prodEnvBtn = document.getElementById('prodEnv');
+        
+        // Environment selection
+        localEnvBtn.addEventListener('click', () => {
+            setEnvironment('local');
+        });
+        
+        prodEnvBtn.addEventListener('click', () => {
+            setEnvironment('production');
+        });
+        
+        function setEnvironment(env) {
+            currentEnvironment = env;
+            
+            // Update UI
+            if (env === 'local') {
+                localEnvBtn.classList.add('active');
+                prodEnvBtn.classList.remove('active');
+            } else {
+                localEnvBtn.classList.remove('active');
+                prodEnvBtn.classList.add('active');
+            }
+            
+            // Update URL inputs
+            wsUrlInput.value = environments[env].ws;
+            apiUrlInput.value = environments[env].api;
+            
+            // If connected, disconnect and reconnect
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                disconnectBtn.click();
+                setTimeout(() => {
+                    connectBtn.click();
+                }, 500);
+            }
+        }
         
         // Connect to WebSocket
         connectBtn.addEventListener('click', () => {
             const wsUrl = wsUrlInput.value.trim();
             if (!wsUrl) {
-                alert('Please enter a WebSocket URL');
+                showNotification('Please enter a WebSocket URL', 'error');
                 return;
             }
             
@@ -283,7 +389,9 @@
                     connectionStatus.className = 'status connected';
                     connectBtn.disabled = true;
                     disconnectBtn.disabled = false;
+                    showNotification('WebSocket connected successfully', 'success');
                     console.log('WebSocket connected');
+                    logEvent('connection', 'Connected to WebSocket server');
                 };
                 
                 socket.onclose = () => {
@@ -291,25 +399,39 @@
                     connectionStatus.className = 'status disconnected';
                     connectBtn.disabled = false;
                     disconnectBtn.disabled = true;
+                    showNotification('WebSocket disconnected', 'error');
                     console.log('WebSocket disconnected');
+                    logEvent('connection', 'Disconnected from WebSocket server');
                     socket = null;
                 };
                 
                 socket.onerror = (error) => {
                     console.error('WebSocket error:', error);
-                    alert('WebSocket error: ' + error.message);
+                    showNotification('WebSocket error: ' + error.message, 'error');
+                    logEvent('error', 'WebSocket error: ' + error.message);
                 };
                 
                 socket.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
-                        handleEvent(data);
+                        console.log('Received message:', data);
+                        logEvent(data.event, JSON.stringify(data.data));
+                        
+                        if (data.event === 'refresh' || data.event === 'refresh_requested') {
+                            showNotification('Received refresh notification', 'success');
+                            fetchCanisters();
+                        } else if (data.event === 'canister_registered') {
+                            showNotification(`New canister registered: ${data.data.canister_id} (${data.data.canister_type})`, 'info');
+                            fetchCanisters();
+                        }
                     } catch (e) {
                         console.error('Error parsing message:', e);
+                        logEvent('error', 'Failed to parse WebSocket message: ' + e.message);
                     }
                 };
             } catch (e) {
-                alert('Failed to connect: ' + e.message);
+                showNotification('Failed to connect: ' + e.message, 'error');
+                logEvent('error', 'Failed to connect: ' + e.message);
             }
         });
         
@@ -320,220 +442,169 @@
             }
         });
         
-        // Clear all events
-        clearEventsBtn.addEventListener('click', () => {
-            tokenConnectedEvents.innerHTML = '';
-            miningStartedEvents.innerHTML = '';
-            solutionFoundEvents.innerHTML = '';
+        // Register canister form submission
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // Clear visualization
-            visualization.querySelectorAll('.miner, .block').forEach(el => el.remove());
-            miners = {};
-            blocks = {};
+            const principal = document.getElementById('principal').value.trim();
+            const canisterId = document.getElementById('canisterId').value.trim();
+            const canisterType = document.getElementById('canisterType').value;
+            
+            if (!principal || !canisterId) {
+                showNotification('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                const apiUrl = apiUrlInput.value.trim();
+                const response = await fetch(`${apiUrl}/canisters`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        principal,
+                        canister_id: canisterId,
+                        canister_type: canisterType,
+                        module_hash: null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification('Canister registered successfully', 'success');
+                    logEvent('api', `Registered canister ${canisterId} (${canisterType})`);
+                    registerForm.reset();
+                    fetchCanisters();
+                } else {
+                    showNotification(`Error: ${data.message || 'Failed to register canister'}`, 'error');
+                    logEvent('error', `Failed to register canister: ${data.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                showNotification(`Error: ${error.message}`, 'error');
+                logEvent('error', `Error registering canister: ${error.message}`);
+                console.error('Error registering canister:', error);
+            }
         });
         
-        // Handle incoming events
-        function handleEvent(data) {
-            console.log('Received event:', data);
-            
-            const event = data.event;
-            const eventData = data.data;
-            const timestamp = new Date(data.timestamp).toLocaleTimeString();
-            
-            // Create event item
-            const eventItem = document.createElement('div');
-            eventItem.className = `event-item ${event}`;
-            
-            const eventTime = document.createElement('div');
-            eventTime.className = 'event-time';
-            eventTime.textContent = timestamp;
-            
-            const eventContent = document.createElement('div');
-            
-            const eventDetails = document.createElement('div');
-            eventDetails.className = 'event-details';
-            eventDetails.textContent = JSON.stringify(eventData, null, 2);
-            
-            eventItem.appendChild(eventTime);
-            eventItem.appendChild(eventContent);
-            eventItem.appendChild(eventDetails);
-            
-            // Process based on event type
-            switch (event) {
-                case 'token_connected':
-                    eventContent.textContent = `Miner ${eventData.miner_id.substring(0, 8)}... connected to token ${eventData.token_id.substring(0, 8)}...`;
-                    tokenConnectedEvents.prepend(eventItem);
-                    addMiner(eventData.miner_id);
-                    break;
-                    
-                case 'mining_started':
-                    eventContent.textContent = `Mining started for block ${eventData.block_height} with difficulty ${eventData.difficulty}`;
-                    miningStartedEvents.prepend(eventItem);
-                    updateBlock(eventData.block_height);
-                    break;
-                    
-                case 'solution_found':
-                    eventContent.textContent = `Solution found for block ${eventData.block_height}! Reward: ${eventData.reward} ${eventData.ticker}`;
-                    solutionFoundEvents.prepend(eventItem);
-                    flashScreen();
-                    celebrateBlock(eventData.block_height);
-                    break;
-                    
-                default:
-                    // Handle unknown events
-                    eventContent.textContent = `Unknown event: ${event}`;
-                    tokenConnectedEvents.prepend(eventItem);
-            }
-            
-            // Limit number of events per category to 20
-            limitEvents(tokenConnectedEvents);
-            limitEvents(miningStartedEvents);
-            limitEvents(solutionFoundEvents);
-        }
+        // Fetch canisters
+        refreshCanistersBtn.addEventListener('click', fetchCanisters);
         
-        // Limit number of events in a container
-        function limitEvents(container) {
-            const maxEvents = 20;
-            const events = container.querySelectorAll('.event-item');
-            
-            if (events.length > maxEvents) {
-                for (let i = maxEvents; i < events.length; i++) {
-                    container.removeChild(events[i]);
+        async function fetchCanisters() {
+            try {
+                canisterList.innerHTML = '<div style="text-align: center;">Loading...</div>';
+                
+                const apiUrl = apiUrlInput.value.trim();
+                const response = await fetch(`${apiUrl}/canisters`);
+                const data = await response.json();
+                
+                if (response.ok && data.data) {
+                    displayCanisters(data.data);
+                    logEvent('api', `Fetched ${data.data.length} canisters`);
+                } else {
+                    canisterList.innerHTML = `<div style="text-align: center; color: #f44336;">
+                        Error: ${data.message || 'Failed to fetch canisters'}
+                    </div>`;
+                    logEvent('error', `Failed to fetch canisters: ${data.message || 'Unknown error'}`);
                 }
+            } catch (error) {
+                canisterList.innerHTML = `<div style="text-align: center; color: #f44336;">
+                    Error: ${error.message}
+                </div>`;
+                logEvent('error', `Error fetching canisters: ${error.message}`);
+                console.error('Error fetching canisters:', error);
             }
         }
         
-        // Add a miner to the visualization
-        function addMiner(minerId) {
-            if (miners[minerId]) return;
-            
-            const miner = document.createElement('div');
-            miner.className = 'miner';
-            miner.title = minerId;
-            
-            // Random position
-            const x = Math.random() * (visualization.clientWidth - 20);
-            const y = Math.random() * (visualization.clientHeight - 20);
-            
-            miner.style.left = `${x}px`;
-            miner.style.top = `${y}px`;
-            
-            // Random color
-            const hue = Math.floor(Math.random() * 360);
-            miner.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
-            
-            visualization.appendChild(miner);
-            miners[minerId] = miner;
-            
-            // Animate miner movement
-            setInterval(() => {
-                if (!miners[minerId]) return;
-                
-                const newX = Math.random() * (visualization.clientWidth - 20);
-                const newY = Math.random() * (visualization.clientHeight - 20);
-                
-                miners[minerId].style.left = `${newX}px`;
-                miners[minerId].style.top = `${newY}px`;
-            }, 3000 + Math.random() * 2000);
-        }
-        
-        // Update block in visualization
-        function updateBlock(height) {
-            blockHeight = height;
-            
-            if (!blocks[height]) {
-                const block = document.createElement('div');
-                block.className = 'block';
-                block.textContent = height;
-                block.title = `Block ${height}`;
-                
-                // Position in center
-                const x = (visualization.clientWidth / 2) - 15;
-                const y = (visualization.clientHeight / 2) - 15;
-                
-                block.style.left = `${x}px`;
-                block.style.top = `${y}px`;
-                
-                visualization.appendChild(block);
-                blocks[height] = block;
+        // Display canisters in the list
+        function displayCanisters(canisters) {
+            if (!canisters || canisters.length === 0) {
+                canisterList.innerHTML = '<div style="text-align: center; color: #888;">No canisters found</div>';
+                return;
             }
-        }
-        
-        // Celebrate block found
-        function celebrateBlock(height) {
-            if (blocks[height]) {
-                // Animate block
-                blocks[height].style.transform = 'scale(1.5)';
-                blocks[height].style.backgroundColor = '#FF4500';
+            
+            canisterList.innerHTML = '';
+            
+            canisters.forEach(canister => {
+                const canisterItem = document.createElement('div');
+                canisterItem.className = `canister-item ${canister.canister_type.toLowerCase()}`;
                 
-                setTimeout(() => {
-                    if (blocks[height]) {
-                        blocks[height].style.transform = 'scale(1)';
-                        blocks[height].style.backgroundColor = '#FFD700';
-                    }
-                }, 1000);
-            }
+                const canisterHeader = document.createElement('div');
+                canisterHeader.innerHTML = `<strong>${canister.canister_id}</strong> (${canister.canister_type})`;
+                
+                const canisterOwner = document.createElement('div');
+                canisterOwner.innerHTML = `<small>Owner: ${canister.principal}</small>`;
+                
+                const canisterDetails = document.createElement('div');
+                canisterDetails.className = 'canister-details';
+                canisterDetails.textContent = JSON.stringify(canister, null, 2);
+                
+                canisterItem.appendChild(canisterHeader);
+                canisterItem.appendChild(canisterOwner);
+                canisterItem.appendChild(canisterDetails);
+                
+                canisterList.appendChild(canisterItem);
+            });
         }
         
-        // Flash screen effect
-        function flashScreen() {
-            flash.style.opacity = '1';
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            notificationArea.appendChild(notification);
+            
+            // Remove notification after 5 seconds
             setTimeout(() => {
-                flash.style.opacity = '0';
-            }, 200);
+                notification.remove();
+            }, 5000);
         }
         
-        // Test with simulated events (for development)
-        function simulateEvent(type) {
-            const events = {
-                token_connected: {
-                    event: 'token_connected',
-                    data: {
-                        token_id: 'aaaaa-bbbbb-ccccc-ddddd-eeeee',
-                        miner_id: 'fffff-ggggg-hhhhh-iiiii-jjjjj',
-                        miner_type: 'Normal'
-                    },
-                    timestamp: Date.now()
-                },
-                mining_started: {
-                    event: 'mining_started',
-                    data: {
-                        token_id: 'aaaaa-bbbbb-ccccc-ddddd-eeeee',
-                        block_height: blockHeight + 1,
-                        difficulty: 12345678,
-                        target: '0000ffff00000000000000000000000000000000000000000000000000000000'
-                    },
-                    timestamp: Date.now()
-                },
-                solution_found: {
-                    event: 'solution_found',
-                    data: {
-                        token_id: 'aaaaa-bbbbb-ccccc-ddddd-eeeee',
-                        ticker: 'BTC',
-                        block_height: blockHeight,
-                        nonce: 12345678,
-                        hash: '000000ff00000000000000000000000000000000000000000000000000000000',
-                        difficulty: 12345678,
-                        reward: 50
-                    },
-                    timestamp: Date.now()
-                }
-            };
+        // Log WebSocket event
+        function logEvent(type, message) {
+            const wasAtBottom = eventLog.scrollHeight - eventLog.clientHeight <= eventLog.scrollTop + 1;
             
-            handleEvent(events[type]);
+            // Clear placeholder if it exists
+            if (eventLog.querySelector('div[style*="text-align: center"]')) {
+                eventLog.innerHTML = '';
+            }
+            
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            
+            const time = new Date().toLocaleTimeString();
+            eventItem.innerHTML = `
+                <span class="event-time">[${time}]</span>
+                <span class="event-type">${type}:</span>
+                <span class="event-data">${message}</span>
+            `;
+            
+            eventLog.appendChild(eventItem);
+            
+            // Auto-scroll if was at bottom
+            if (wasAtBottom) {
+                eventLog.scrollTop = eventLog.scrollHeight;
+            }
         }
         
-        // Add test buttons in development mode
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            const testControls = document.createElement('div');
-            testControls.className = 'controls';
-            testControls.innerHTML = `
-                <button onclick="simulateEvent('token_connected')">Simulate Connect</button>
-                <button onclick="simulateEvent('mining_started')">Simulate Mining</button>
-                <button onclick="simulateEvent('solution_found')">Simulate Solution</button>
-            `;
-            document.body.insertBefore(testControls, document.querySelector('.events-container'));
-        }
+        // Clear event log
+        clearEventsBtn.addEventListener('click', () => {
+            eventLog.innerHTML = '<div style="text-align: center; color: #888;">No events received yet</div>';
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-connect if on localhost
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                setEnvironment('local');
+                connectBtn.click();
+            } else if (window.location.hostname === '134.209.193.115') {
+                setEnvironment('production');
+                connectBtn.click();
+            }
+        });
     </script>
 </body>
 </html> 

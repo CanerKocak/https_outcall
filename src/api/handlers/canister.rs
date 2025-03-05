@@ -1,6 +1,7 @@
 use actix_web::{web, HttpResponse, Responder};
 use serde::Deserialize;
 use log::{info, error};
+use serde_json;
 
 use crate::db::pool::DbPool;
 use crate::db::models::canister::{Canister, CanisterType};
@@ -8,6 +9,7 @@ use crate::api::handlers::ApiResponse;
 use crate::db::models::verified_module_hash::VerifiedModuleHash;
 use crate::ic::agent::create_agent;
 use crate::ic::services::module_hash::get_module_hash;
+use crate::websocket;
 
 #[derive(Deserialize)]
 pub struct RegisterCanisterRequest {
@@ -148,6 +150,17 @@ pub async fn register_canister(
                     }
                 }
             }
+            
+            // Send WebSocket notification about the new canister
+            websocket::broadcast_notification(
+                "canister_registered", 
+                serde_json::json!({
+                    "canister_id": request.canister_id,
+                    "principal": request.principal,
+                    "canister_type": request.canister_type,
+                    "timestamp": chrono::Utc::now().timestamp_millis()
+                })
+            );
             
             HttpResponse::Created().json(
                 ApiResponse::success(canister, "Canister registered successfully")

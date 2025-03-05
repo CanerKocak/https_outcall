@@ -3,6 +3,7 @@ use actix_files as fs;
 use log::{info, error};
 use std::path::Path;
 use env_logger::Env;
+use actix_cors::Cors;
 
 mod db;
 mod ic;
@@ -57,7 +58,16 @@ async fn main() -> std::io::Result<()> {
     info!("Starting server on [::]:8080");
     
     HttpServer::new(move || {
+        // Configure CORS middleware
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .allow_any_header()
+            .max_age(3600);
+            
         App::new()
+            // Enable CORS middleware
+            .wrap(cors)
             // Enable logger middleware
             .wrap(middleware::Logger::default())
             
