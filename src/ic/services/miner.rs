@@ -92,7 +92,7 @@ async fn get_mining_stats(agent: &Agent, canister_id: &str) -> Result<Option<DbM
     // Return None if no stats available
     let stats = match stats_opt {
         Some(stats) => stats,
-        None => return Ok(None),
+        _ => return Ok(None),
     };
     
     // Convert to database model

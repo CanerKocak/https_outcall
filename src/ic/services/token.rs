@@ -3,7 +3,7 @@ use candid::{Decode, Encode, Principal};
 use anyhow::{Result, Context, anyhow};
 use log::info;
 
-use crate::ic::candid::token::{Result as CandidResult};
+use crate::ic::candid::token::Result as CandidResult;
 use crate::db::models::token_info::TokenInfo as DbTokenInfo;
 
 /// Get token info from a token canister

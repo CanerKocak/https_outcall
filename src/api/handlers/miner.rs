@@ -66,7 +66,7 @@ pub async fn get_miner(
                 ApiResponse::success(miner, "Miner retrieved successfully")
             )
         },
-        Ok(None) => {
+        Ok(_) => {
             HttpResponse::NotFound().json(
                 ApiResponse::<MinerInfo>::error(&format!("Miner with canister ID {} not found", canister_id))
             )
@@ -104,7 +104,7 @@ pub async fn get_miner_stats(
                 ApiResponse::success(stats, "Mining stats retrieved successfully")
             )
         },
-        Ok(None) => {
+        Ok(_) => {
             HttpResponse::NotFound().json(
                 ApiResponse::<MiningStats>::error(&format!("Mining stats for canister ID {} not found", canister_id))
             )
@@ -194,7 +194,7 @@ pub async fn delete_miner(
                 }
             }
         },
-        Ok(None) => {
+        Ok(_) => {
             HttpResponse::NotFound().json(ApiResponse::<bool>::error(&format!("Miner with ID {} not found", canister_id)))
         },
         Err(e) => {

@@ -88,7 +88,7 @@ where
         // Get the database pool from app data
         let db_pool = match req.app_data::<actix_web::web::Data<DbPool>>() {
             Some(pool) => pool.clone(),
-            None => {
+            _ => {
                 error!("DB pool not found in app data");
                 let _resp = HttpResponse::InternalServerError()
                     .json(ApiResponse::<()>::error("Server configuration error"));
@@ -121,7 +121,7 @@ where
                     let fut = service.call(req);
                     fut.await
                 }
-                Ok(None) => {
+                Ok(_) => {
                     let _resp = HttpResponse::Unauthorized()
                         .json(ApiResponse::<()>::error("Invalid API key"));
                     Err(actix_web::error::ErrorUnauthorized("Invalid API key"))

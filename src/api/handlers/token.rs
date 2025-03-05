@@ -58,7 +58,7 @@ pub async fn get_token(
                 ApiResponse::success(token, "Token retrieved successfully")
             )
         },
-        Ok(None) => {
+        Ok(_) => {
             HttpResponse::NotFound().json(
                 ApiResponse::<TokenInfo>::error(&format!("Token with canister ID {} not found", canister_id))
             )
@@ -108,7 +108,7 @@ pub async fn delete_token(
                 }
             }
         },
-        Ok(None) => {
+        Ok(_) => {
             HttpResponse::NotFound().json(ApiResponse::<bool>::error(&format!("Token with ID {} not found", canister_id)))
         },
         Err(e) => {

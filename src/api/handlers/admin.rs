@@ -318,7 +318,7 @@ pub async fn set_module_hash(
             // Get the canister
             let canister = match Canister::find_by_id(&conn, &canister_id) {
                 Ok(Some(canister)) => canister,
-                Ok(None) => {
+                Ok(_) => {
                     return HttpResponse::NotFound()
                         .json(ApiResponse::<()>::error(&format!("Canister {} not found", canister_id)));
                 }

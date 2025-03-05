@@ -20,7 +20,7 @@ pub async fn authenticate_admin(
                     .json(ApiResponse::<()>::error("Invalid API key format")));
             }
         },
-        None => {
+        _ => {
             return Err(HttpResponse::Unauthorized()
                 .json(ApiResponse::<()>::error("API key required")));
         }
@@ -42,7 +42,7 @@ pub async fn authenticate_admin(
             info!("Admin authenticated: {}", admin.username);
             Ok(admin)
         }
-        Ok(None) => {
+        Ok(_) => {
             Err(HttpResponse::Unauthorized()
                 .json(ApiResponse::<()>::error("Invalid API key")))
         }

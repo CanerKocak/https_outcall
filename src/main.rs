@@ -30,9 +30,6 @@ async fn main() -> std::io::Result<()> {
         }
     };
     
-    // Create shared database pool
-    let db_pool = Arc::new(db_pool);
-    
     // Create default admin account if none exists
     match db_pool.get() {
         Ok(conn) => {
@@ -47,8 +44,10 @@ async fn main() -> std::io::Result<()> {
         }
     }
     
+    // Create shared database pool for the scheduler
+    let scheduler_db_pool = Arc::new(db_pool.clone());
+    
     // Start background job scheduler
-    let scheduler_db_pool = db_pool.clone();
     tokio::spawn(async move {
         jobs::start_scheduler(scheduler_db_pool).await;
     });

@@ -83,7 +83,7 @@ pub async fn register_canister(
                 ApiResponse::<Canister>::error(&format!("Canister with ID {} already exists", request.canister_id))
             );
         },
-        Ok(None) => {},
+        Ok(_) => {},
         Err(e) => {
             error!("Failed to check if canister exists: {}", e);
             return HttpResponse::InternalServerError().json(
@@ -186,7 +186,7 @@ pub async fn get_canister(
                 ApiResponse::success(canister, "Canister retrieved successfully")
             )
         },
-        Ok(None) => {
+        Ok(_) => {
             HttpResponse::NotFound().json(
                 ApiResponse::<Canister>::error(&format!("Canister with ID {} not found", canister_id))
             )
@@ -222,7 +222,7 @@ pub async fn update_canister(
     // Get existing canister
     let mut canister = match Canister::find_by_canister_id(&conn, &canister_id) {
         Ok(Some(canister)) => canister,
-        Ok(None) => {
+        Ok(_) => {
             return HttpResponse::NotFound().json(
                 ApiResponse::<Canister>::error(&format!("Canister with ID {} not found", canister_id))
             );
@@ -307,7 +307,7 @@ pub async fn delete_canister(
                 }
             }
         },
-        Ok(None) => {
+        Ok(_) => {
             HttpResponse::NotFound().json(ApiResponse::<bool>::error("Canister not found"))
         },
         Err(e) => {
@@ -355,7 +355,7 @@ pub async fn set_module_hash(
             
             HttpResponse::Ok().json(ApiResponse::success(true, "Module hash updated"))
         },
-        Ok(None) => {
+        Ok(_) => {
             HttpResponse::NotFound().json(ApiResponse::<bool>::error("Canister not found"))
         },
         Err(e) => {
@@ -484,7 +484,7 @@ pub async fn remove_verified_module_hash(
                 }
             }
         },
-        Ok(None) => {
+        Ok(_) => {
             HttpResponse::NotFound().json(ApiResponse::<bool>::error("Verified module hash not found"))
         },
         Err(e) => {
@@ -540,7 +540,7 @@ async fn update_and_verify_module_hash(
             
             Ok(())
         },
-        None => {
+        _ => {
             Err(anyhow::anyhow!("Canister not found"))
         }
     }
