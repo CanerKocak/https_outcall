@@ -1,0 +1,1 @@
+ssh -i ~/.ssh/id_ed25519 root@134.209.193.115 "cd ~/https_outcall && git reset --hard && git fetch origin && git checkout origin/main -B main && source ~/.cargo/env && cargo build --release && sudo systemctl restart https-outcall.service && sudo reboot"

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mining WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+        
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .connected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .disconnected {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .events-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .event-card {
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #2a2a2a;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .event-card h3 {
+            margin-top: 0;
+            color: #4CAF50;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        
+        .event-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .event-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #333;
+            border-left: 4px solid #4CAF50;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .event-item.token-connected {
+            border-left-color: #2196F3;
+        }
+        
+        .event-item.mining-started {
+            border-left-color: #FF9800;
+        }
+        
+        .event-item.solution-found {
+            border-left-color: #f44336;
+            animation: pulse 1s infinite;
+        }
+        
+        .event-time {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .event-details {
+            margin-top: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #222;
+            padding: 8px;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .mining-visualization {
+            height: 200px;
+            background-color: #222;
+            border-radius: 8px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .miner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+        
+        .block {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #FFD700;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 215, 0, 0.3);
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #clearEvents {
+            background-color: #f44336;
+        }
+        
+        #clearEvents:hover {
+            background-color: #d32f2f;
+        }
+        
+        .connection-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #2a2a2a;
+            border-radius: 8px;
+        }
+        
+        input[type="text"] {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            background-color: #333;
+            border: 1px solid #444;
+            color: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mining WebSocket Test</h1>
+    
+    <div class="connection-info">
+        <input type="text" id="wsUrl" value="ws://localhost:8080/ws" placeholder="WebSocket URL">
+        <div id="connectionStatus" class="status disconnected">Disconnected</div>
+    </div>
+    
+    <div class="controls">
+        <button id="connect">Connect</button>
+        <button id="disconnect" disabled>Disconnect</button>
+        <button id="clearEvents">Clear Events</button>
+    </div>
+    
+    <div class="mining-visualization">
+        <div class="flash" id="flash"></div>
+        <!-- Miners and blocks will be added dynamically -->
+    </div>
+    
+    <div class="events-container">
+        <div class="event-card">
+            <h3>Token Connected Events</h3>
+            <div class="event-list" id="tokenConnectedEvents"></div>
+        </div>
+        
+        <div class="event-card">
+            <h3>Mining Started Events</h3>
+            <div class="event-list" id="miningStartedEvents"></div>
+        </div>
+        
+        <div class="event-card">
+            <h3>Solution Found Events</h3>
+            <div class="event-list" id="solutionFoundEvents"></div>
+        </div>
+    </div>
+    
+    <script>
+        let socket = null;
+        let miners = {};
+        let blocks = {};
+        let blockHeight = 0;
+        
+        // DOM elements
+        const connectionStatus = document.getElementById('connectionStatus');
+        const wsUrlInput = document.getElementById('wsUrl');
+        const connectBtn = document.getElementById('connect');
+        const disconnectBtn = document.getElementById('disconnect');
+        const clearEventsBtn = document.getElementById('clearEvents');
+        const tokenConnectedEvents = document.getElementById('tokenConnectedEvents');
+        const miningStartedEvents = document.getElementById('miningStartedEvents');
+        const solutionFoundEvents = document.getElementById('solutionFoundEvents');
+        const visualization = document.querySelector('.mining-visualization');
+        const flash = document.getElementById('flash');
+        
+        // Connect to WebSocket
+        connectBtn.addEventListener('click', () => {
+            const wsUrl = wsUrlInput.value.trim();
+            if (!wsUrl) {
+                alert('Please enter a WebSocket URL');
+                return;
+            }
+            
+            try {
+                socket = new WebSocket(wsUrl);
+                
+                socket.onopen = () => {
+                    connectionStatus.textContent = 'Connected';
+                    connectionStatus.className = 'status connected';
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = false;
+                    console.log('WebSocket connected');
+                };
+                
+                socket.onclose = () => {
+                    connectionStatus.textContent = 'Disconnected';
+                    connectionStatus.className = 'status disconnected';
+                    connectBtn.disabled = false;
+                    disconnectBtn.disabled = true;
+                    console.log('WebSocket disconnected');
+                    socket = null;
+                };
+                
+                socket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    alert('WebSocket error: ' + error.message);
+                };
+                
+                socket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleEvent(data);
+                    } catch (e) {
+                        console.error('Error parsing message:', e);
+                    }
+                };
+            } catch (e) {
+                alert('Failed to connect: ' + e.message);
+            }
+        });
+        
+        // Disconnect from WebSocket
+        disconnectBtn.addEventListener('click', () => {
+            if (socket) {
+                socket.close();
+            }
+        });
+        
+        // Clear all events
+        clearEventsBtn.addEventListener('click', () => {
+            tokenConnectedEvents.innerHTML = '';
+            miningStartedEvents.innerHTML = '';
+            solutionFoundEvents.innerHTML = '';
+            
+            // Clear visualization
+            visualization.querySelectorAll('.miner, .block').forEach(el => el.remove());
+            miners = {};
+            blocks = {};
+        });
+        
+        // Handle incoming events
+        function handleEvent(data) {
+            console.log('Received event:', data);
+            
+            const event = data.event;
+            const eventData = data.data;
+            const timestamp = new Date(data.timestamp).toLocaleTimeString();
+            
+            // Create event item
+            const eventItem = document.createElement('div');
+            eventItem.className = `event-item ${event}`;
+            
+            const eventTime = document.createElement('div');
+            eventTime.className = 'event-time';
+            eventTime.textContent = timestamp;
+            
+            const eventContent = document.createElement('div');
+            
+            const eventDetails = document.createElement('div');
+            eventDetails.className = 'event-details';
+            eventDetails.textContent = JSON.stringify(eventData, null, 2);
+            
+            eventItem.appendChild(eventTime);
+            eventItem.appendChild(eventContent);
+            eventItem.appendChild(eventDetails);
+            
+            // Process based on event type
+            switch (event) {
+                case 'token_connected':
+                    eventContent.textContent = `Miner ${eventData.miner_id.substring(0, 8)}... connected to token ${eventData.token_id.substring(0, 8)}...`;
+                    tokenConnectedEvents.prepend(eventItem);
+                    addMiner(eventData.miner_id);
+                    break;
+                    
+                case 'mining_started':
+                    eventContent.textContent = `Mining started for block ${eventData.block_height} with difficulty ${eventData.difficulty}`;
+                    miningStartedEvents.prepend(eventItem);
+                    updateBlock(eventData.block_height);
+                    break;
+                    
+                case 'solution_found':
+                    eventContent.textContent = `Solution found for block ${eventData.block_height}! Reward: ${eventData.reward} ${eventData.ticker}`;
+                    solutionFoundEvents.prepend(eventItem);
+                    flashScreen();
+                    celebrateBlock(eventData.block_height);
+                    break;
+                    
+                default:
+                    // Handle unknown events
+                    eventContent.textContent = `Unknown event: ${event}`;
+                    tokenConnectedEvents.prepend(eventItem);
+            }
+            
+            // Limit number of events per category to 20
+            limitEvents(tokenConnectedEvents);
+            limitEvents(miningStartedEvents);
+            limitEvents(solutionFoundEvents);
+        }
+        
+        // Limit number of events in a container
+        function limitEvents(container) {
+            const maxEvents = 20;
+            const events = container.querySelectorAll('.event-item');
+            
+            if (events.length > maxEvents) {
+                for (let i = maxEvents; i < events.length; i++) {
+                    container.removeChild(events[i]);
+                }
+            }
+        }
+        
+        // Add a miner to the visualization
+        function addMiner(minerId) {
+            if (miners[minerId]) return;
+            
+            const miner = document.createElement('div');
+            miner.className = 'miner';
+            miner.title = minerId;
+            
+            // Random position
+            const x = Math.random() * (visualization.clientWidth - 20);
+            const y = Math.random() * (visualization.clientHeight - 20);
+            
+            miner.style.left = `${x}px`;
+            miner.style.top = `${y}px`;
+            
+            // Random color
+            const hue = Math.floor(Math.random() * 360);
+            miner.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
+            
+            visualization.appendChild(miner);
+            miners[minerId] = miner;
+            
+            // Animate miner movement
+            setInterval(() => {
+                if (!miners[minerId]) return;
+                
+                const newX = Math.random() * (visualization.clientWidth - 20);
+                const newY = Math.random() * (visualization.clientHeight - 20);
+                
+                miners[minerId].style.left = `${newX}px`;
+                miners[minerId].style.top = `${newY}px`;
+            }, 3000 + Math.random() * 2000);
+        }
+        
+        // Update block in visualization
+        function updateBlock(height) {
+            blockHeight = height;
+            
+            if (!blocks[height]) {
+                const block = document.createElement('div');
+                block.className = 'block';
+                block.textContent = height;
+                block.title = `Block ${height}`;
+                
+                // Position in center
+                const x = (visualization.clientWidth / 2) - 15;
+                const y = (visualization.clientHeight / 2) - 15;
+                
+                block.style.left = `${x}px`;
+                block.style.top = `${y}px`;
+                
+                visualization.appendChild(block);
+                blocks[height] = block;
+            }
+        }
+        
+        // Celebrate block found
+        function celebrateBlock(height) {
+            if (blocks[height]) {
+                // Animate block
+                blocks[height].style.transform = 'scale(1.5)';
+                blocks[height].style.backgroundColor = '#FF4500';
+                
+                setTimeout(() => {
+                    if (blocks[height]) {
+                        blocks[height].style.transform = 'scale(1)';
+                        blocks[height].style.backgroundColor = '#FFD700';
+                    }
+                }, 1000);
+            }
+        }
+        
+        // Flash screen effect
+        function flashScreen() {
+            flash.style.opacity = '1';
+            setTimeout(() => {
+                flash.style.opacity = '0';
+            }, 200);
+        }
+        
+        // Test with simulated events (for development)
+        function simulateEvent(type) {
+            const events = {
+                token_connected: {
+                    event: 'token_connected',
+                    data: {
+                        token_id: 'aaaaa-bbbbb-ccccc-ddddd-eeeee',
+                        miner_id: 'fffff-ggggg-hhhhh-iiiii-jjjjj',
+                        miner_type: 'Normal'
+                    },
+                    timestamp: Date.now()
+                },
+                mining_started: {
+                    event: 'mining_started',
+                    data: {
+                        token_id: 'aaaaa-bbbbb-ccccc-ddddd-eeeee',
+                        block_height: blockHeight + 1,
+                        difficulty: 12345678,
+                        target: '0000ffff00000000000000000000000000000000000000000000000000000000'
+                    },
+                    timestamp: Date.now()
+                },
+                solution_found: {
+                    event: 'solution_found',
+                    data: {
+                        token_id: 'aaaaa-bbbbb-ccccc-ddddd-eeeee',
+                        ticker: 'BTC',
+                        block_height: blockHeight,
+                        nonce: 12345678,
+                        hash: '000000ff00000000000000000000000000000000000000000000000000000000',
+                        difficulty: 12345678,
+                        reward: 50
+                    },
+                    timestamp: Date.now()
+                }
+            };
+            
+            handleEvent(events[type]);
+        }
+        
+        // Add test buttons in development mode
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            const testControls = document.createElement('div');
+            testControls.className = 'controls';
+            testControls.innerHTML = `
+                <button onclick="simulateEvent('token_connected')">Simulate Connect</button>
+                <button onclick="simulateEvent('mining_started')">Simulate Mining</button>
+                <button onclick="simulateEvent('solution_found')">Simulate Solution</button>
+            `;
+            document.body.insertBefore(testControls, document.querySelector('.events-container'));
+        }
+    </script>
+</body>
+</html> 

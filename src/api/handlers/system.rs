@@ -1,13 +1,13 @@
 use actix_web::{web, HttpResponse, Responder};
 use log::{info, error};
 use serde::Serialize;
-use std::sync::Arc;
+use serde_json::json;
 use std::collections::HashMap;
 
 use crate::db::DbPool;
 use crate::api::handlers::ApiResponse;
-use crate::jobs::tasks::{update_tokens, update_miners};
 use crate::ic::utils::interface_util::generate_interface_files;
+use crate::websocket;
 
 #[derive(Serialize)]
 pub struct SystemStatus {
@@ -85,33 +85,22 @@ pub async fn get_system_status(db_pool: web::Data<DbPool>) -> impl Responder {
     )
 }
 
-/// Trigger a manual refresh of all canister info
-pub async fn trigger_refresh(db_pool: web::Data<DbPool>) -> impl Responder {
-    info!("API: Trigger refresh");
+/// Trigger a manual refresh notification via WebSockets
+pub async fn trigger_refresh(_db_pool: web::Data<DbPool>) -> impl Responder {
+    info!("API: Trigger refresh notification");
     
-    // Clone the pool for the tasks
-    let db_pool_arc = Arc::new(db_pool.get_ref().clone());
-    
-    // Spawn tasks to update tokens and miners
-    let token_db_pool = db_pool_arc.clone();
-    let miner_db_pool = db_pool_arc.clone();
-    
-    // Update tokens
-    tokio::spawn(async move {
-        if let Err(e) = update_tokens::run(token_db_pool).await {
-            error!("Error updating tokens: {}", e);
-        }
-    });
-    
-    // Update miners
-    tokio::spawn(async move {
-        if let Err(e) = update_miners::run(miner_db_pool).await {
-            error!("Error updating miners: {}", e);
-        }
-    });
+    // Instead of running background tasks, we'll just broadcast a notification
+    // that clients can use to refresh their data
+    websocket::broadcast_notification(
+        "refresh_requested", 
+        json!({
+            "timestamp": chrono::Utc::now().timestamp_millis(),
+            "message": "Manual refresh requested"
+        })
+    );
     
     HttpResponse::Ok().json(
-        ApiResponse::success(true, "Refresh triggered successfully")
+        ApiResponse::success(true, "Refresh notification sent successfully")
     )
 }
 

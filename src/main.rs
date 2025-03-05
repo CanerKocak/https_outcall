@@ -1,13 +1,16 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::{web, App, HttpServer, middleware, guard, HttpRequest};
+use actix_files as fs;
 use log::{info, error};
 use std::path::Path;
-use std::sync::Arc;
 use env_logger::Env;
 
 mod db;
 mod ic;
 mod api;
-mod jobs;
+// mod jobs; // Commented out since we're using WebSockets instead
+mod websocket;
+mod websocket_handler;
+mod canister_notifications;
 
 use db::models::admin::Admin;
 
@@ -44,21 +47,62 @@ async fn main() -> std::io::Result<()> {
         }
     }
     
-    // Create shared database pool for the scheduler
-    let scheduler_db_pool = Arc::new(db_pool.clone());
+    // Initialize WebSocket server
+    let websocket_server = websocket::init_websocket_server();
     
-    // Start background job scheduler
-    tokio::spawn(async move {
-        jobs::start_scheduler(scheduler_db_pool).await;
-    });
+    // Start cache cleanup task
+    canister_notifications::start_cache_cleanup_task();
     
     // Start HTTP server
     info!("Starting server on [::]:8080");
     
     HttpServer::new(move || {
         App::new()
+            // Enable logger middleware
+            .wrap(middleware::Logger::default())
+            
+            // Database connection pool
             .app_data(web::Data::new(db_pool.clone()))
+            
+            // WebSocket server data
+            .app_data(web::Data::new(websocket_server.clone()))
+            
+            // API routes
             .configure(api::configure_routes)
+            
+            // WebSocket route
+            .service(web::resource("/ws").route(web::get().to(websocket_handler::websocket_route)))
+            
+            // WebSocket status endpoint
+            .service(web::resource("/ws-status").route(web::get().to(websocket_handler::websocket_status)))
+            
+            // Canister notification endpoint
+            .service(
+                web::resource("/miner-notifications")
+                    .route(web::post().to(canister_notifications::handle_canister_notification))
+            )
+            
+            // Serve static files
+            .service(fs::Files::new("/static", "./static").show_files_listing())
+            
+            // Serve WebSocket test page - fixed with proper type annotation
+            .service(web::resource("/test").route(web::get().guard(guard::Header("accept", "text/html")).to(
+                |_req: HttpRequest| async {
+                    actix_web::HttpResponse::Ok()
+                        .content_type("text/html; charset=utf-8")
+                        .body(include_str!("../static/websocket_test.html"))
+                }
+            )))
+            
+            // Default route - fixed to use a proper service
+            .service(
+                web::resource("/")
+                    .route(web::get().to(|_req: HttpRequest| async {
+                        actix_web::HttpResponse::Found()
+                            .append_header(("Location", "/test"))
+                            .finish()
+                    }))
+            )
     })
     .bind(("::", 8080))?
     .run()

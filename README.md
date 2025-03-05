@@ -149,3 +149,89 @@ The server uses SQLite for persistent storage:
 ## IPv6 Compatibility
 
 This server is specifically configured to bind to IPv6 addresses to ensure compatibility with Internet Computer canister HTTPS outcalls, which require IPv6 connectivity. Thanks to IPv6 dual-stack compatibility, the server remains accessible via both IPv4 and IPv6 addresses.
+
+## WebSocket Functionality
+
+This application includes a WebSocket server that broadcasts mining events to connected clients. This enables real-time updates for your frontend, creating a FOMO-inducing experience as users can see mining activity as it happens.
+
+### Key Features
+
+1. **Real-time Event Broadcasting**: All miner events (token connections, mining starts, and solutions found) are broadcast to all connected WebSocket clients.
+
+2. **Deduplication Logic**: The server handles duplicate notifications from the Internet Computer, ensuring each event is processed only once.
+
+3. **Visualization**: A test page is included that visualizes mining activity with animations and effects.
+
+### Testing the WebSocket
+
+1. **Start the Server**:
+   ```bash
+   cargo run
+   ```
+
+2. **Open the Test Page**:
+   Open your browser and navigate to `http://localhost:8080/test`
+
+3. **Connect to WebSocket**:
+   Click the "Connect" button on the test page to establish a WebSocket connection.
+
+4. **Simulate Events**:
+   In development mode, you can use the simulation buttons to test different event types.
+
+5. **Real Events**:
+   To test with real events, configure your miner canister to send notifications to:
+   ```
+   http://your-server-ip:8080/miner-notifications
+   ```
+
+### Canister Notification API
+
+Miners can send notifications to the `/miner-notifications` endpoint with the following structure:
+
+```json
+{
+  "event": "solution_found",
+  "miner_id": "aaaaa-bbbbb-ccccc-ddddd-eeeee",
+  "timestamp": 1646456789000000000,
+  "data": {
+    "token_id": "aaaaa-bbbbb-ccccc-ddddd-eeeee",
+    "block_height": 12345,
+    "nonce": 67890,
+    "hash": "000000ff00000000000000000000000000000000000000000000000000000000",
+    "difficulty": 12345678,
+    "reward": 50
+  }
+}
+```
+
+The API requires an `X-API-Key` header for authentication.
+
+### WebSocket Protocol
+
+Clients connect to the WebSocket endpoint at `/ws`. The server sends JSON messages with the following structure:
+
+```json
+{
+  "event": "solution_found",
+  "data": {
+    "token_id": "aaaaa-bbbbb-ccccc-ddddd-eeeee",
+    "block_height": 12345,
+    "nonce": 67890,
+    "hash": "000000ff00000000000000000000000000000000000000000000000000000000",
+    "difficulty": 12345678,
+    "reward": 50
+  },
+  "timestamp": 1646456789000
+}
+```
+
+### Handling Duplicate Notifications
+
+The Internet Computer may send the same notification multiple times due to its consensus mechanism. Our server handles this by:
+
+1. Creating a unique cache key for each notification based on miner ID, timestamp, and event type
+2. Storing the response in a cache with a 5-minute expiration
+3. Returning the cached response for duplicate notifications
+4. Only processing and broadcasting the event the first time it's received
+
+This ensures that even if a notification is received multiple times, it will only be broadcast to WebSocket clients once.
