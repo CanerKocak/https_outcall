@@ -4,6 +4,7 @@ use log::{info, error};
 use std::path::Path;
 use env_logger::Env;
 use actix_cors::Cors;
+use dotenv::dotenv;
 
 mod db;
 mod ic;
@@ -17,6 +18,9 @@ use db::models::admin::Admin;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Load environment variables from .env file
+    dotenv().ok();
+    
     // Initialize logger
     env_logger::init_from_env(Env::default().default_filter_or("info"));
     info!("Starting ICP Canister Registry");
@@ -51,8 +55,9 @@ async fn main() -> std::io::Result<()> {
     // Initialize WebSocket server
     let websocket_server = websocket::init_websocket_server();
     
-    // Start cache cleanup task
+    // Start cache cleanup tasks
     canister_notifications::start_cache_cleanup_task();
+    api::handlers::claude::start_cache_cleanup_task();
     
     // Start HTTP server
     info!("Starting server on [::]:8080");

@@ -43,6 +43,7 @@ lazy_static = "1.4.0"
 anyhow = "1.0"
 thiserror = "1.0"
 dashmap = "5.5.3"
+dotenv = "0.15.0"
 
 # Authentication
 argon2 = { version = "0.5", features = ["std"] }

@@ -1,5 +1,5 @@
 use actix_web::web;
-use crate::api::handlers::{canister, token, miner, system, admin};
+use crate::api::handlers::{canister, token, miner, system, admin, claude};
 
 /// Configure the API routes
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
@@ -47,6 +47,12 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     // Admin module hash management routes
     cfg.route("/admin/canisters/module-hashes", web::get().to(admin::get_all_module_hashes));
     cfg.route("/admin/canisters/{canister_id}/module-hash", web::put().to(admin::set_module_hash));
+    
+    // Claude API route
+    cfg.service(
+        web::scope("/claude")
+            .route("", web::post().to(claude::handle_claude_request))
+    );
     
     // System routes
     cfg.service(

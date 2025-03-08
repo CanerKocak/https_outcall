@@ -3,6 +3,7 @@ pub mod token;
 pub mod miner;
 pub mod system;
 pub mod admin;
+pub mod claude;
 
 use serde::{Deserialize, Serialize};
 

@@ -10,6 +10,9 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Function to print colored section headers
 section() {
     echo -e "\n${BLUE}=======================================================${NC}"
@@ -24,13 +27,13 @@ error() {
 }
 
 # Check if all test scripts exist
-if [ ! -f "./test_add_canister.sh" ] || [ ! -f "./test_ic_agent.sh" ]; then
+if [ ! -f "${SCRIPT_DIR}/test_add_canister.sh" ] || [ ! -f "${SCRIPT_DIR}/test_ic_agent.sh" ]; then
     error "Test scripts not found. Make sure test_add_canister.sh and test_ic_agent.sh exist."
 fi
 
 # Ensure all test scripts are executable
-chmod +x ./test_add_canister.sh
-chmod +x ./test_ic_agent.sh
+chmod +x "${SCRIPT_DIR}/test_add_canister.sh"
+chmod +x "${SCRIPT_DIR}/test_ic_agent.sh"
 
 # Display testing plan
 section "ICP Canister Registry Test Plan"
@@ -55,12 +58,12 @@ read -p "Press Enter to begin testing..." val
 
 # Run API test
 section "Running API Functionality Test"
-./test_add_canister.sh
+"${SCRIPT_DIR}/test_add_canister.sh"
 API_TEST_RESULT=$?
 
 # Run IC Agent test
 section "Running IC Agent Connectivity Test"
-./test_ic_agent.sh
+"${SCRIPT_DIR}/test_ic_agent.sh"
 IC_AGENT_TEST_RESULT=$?
 
 # Display final results

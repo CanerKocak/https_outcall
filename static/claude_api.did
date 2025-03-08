@@ -1,0 +1,43 @@
+type ClaudeMessage = record {
+  role : text;
+  content : text;
+};
+
+type ClaudeRequest = record {
+  canister_id : text;
+  request_id : text;
+  system : opt text;
+  messages : vec ClaudeMessage;
+  max_tokens : opt nat32;
+  temperature : opt float64;
+};
+
+type ClaudeContent = record {
+  "type" : text;
+  text : text;
+};
+
+type ClaudeUsage = record {
+  input_tokens : nat32;
+  output_tokens : nat32;
+};
+
+type ClaudeResponse = record {
+  id : text;
+  content : vec ClaudeContent;
+  model : text;
+  role : text;
+  stop_reason : opt text;
+  stop_sequence : opt text;
+  usage : opt ClaudeUsage;
+};
+
+type ApiResponse = record {
+  success : bool;
+  message : text;
+  data : opt ClaudeResponse;
+};
+
+service : {
+  "callClaude" : (ClaudeRequest) -> (ApiResponse);
+} 
