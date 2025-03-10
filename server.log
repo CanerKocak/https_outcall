@@ -1,0 +1,208 @@
+warning: unused import: `serde_json::Value`
+ --> src/api/handlers/claude.rs:4:5
+  |
+4 | use serde_json::Value;
+  |     ^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: associated function `find_by_type` is never used
+   --> src/db/models/canister.rs:154:12
+    |
+47  | impl Canister {
+    | ------------- associated function in this implementation
+...
+154 |     pub fn find_by_type(conn: &Connection, canister_type: &CanisterType) -> Result<Vec<Self>> {
+    |            ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: associated items `new` and `save` are never used
+  --> src/db/models/token_info.rs:19:12
+   |
+18 | impl TokenInfo {
+   | -------------- associated items in this implementation
+19 |     pub fn new(
+   |            ^^^
+...
+56 |     pub fn save(&self, conn: &Connection) -> Result<()> {
+   |            ^^^^
+
+warning: associated items `new` and `save` are never used
+  --> src/db/models/miner_info.rs:48:12
+   |
+47 | impl MinerInfo {
+   | -------------- associated items in this implementation
+48 |     pub fn new(
+   |            ^^^
+...
+86 |     pub fn save(&self, conn: &Connection) -> Result<()> {
+   |            ^^^^
+
+warning: associated items `new`, `save`, and `delete` are never used
+   --> src/db/models/mining_stats.rs:18:12
+    |
+17  | impl MiningStats {
+    | ---------------- associated items in this implementation
+18  |     pub fn new(
+    |            ^^^
+...
+52  |     pub fn save(&self, conn: &Connection) -> Result<()> {
+    |            ^^^^
+...
+112 |     pub fn delete(conn: &Connection, canister_id: &str) -> Result<bool> {
+    |            ^^^^^^
+
+warning: associated functions `find_by_hash` and `find_by_canister_type` are never used
+   --> src/db/models/verified_module_hash.rs:86:12
+    |
+17  | impl VerifiedModuleHash {
+    | ----------------------- associated functions in this implementation
+...
+86  |     pub fn find_by_hash(conn: &Connection, hash: &str) -> Result<Option<Self>> {
+    |            ^^^^^^^^^^^^
+...
+102 |     pub fn find_by_canister_type(conn: &Connection, canister_type: &str) -> Result<Vec<Self>> {
+    |            ^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `verify_password` and `find_by_username` are never used
+   --> src/db/models/admin.rs:108:12
+    |
+44  | impl Admin {
+    | ---------- associated items in this implementation
+...
+108 |     pub fn verify_password(&self, password: &str) -> Result<bool, anyhow::Error> {
+    |            ^^^^^^^^^^^^^^^
+...
+117 |     pub fn find_by_username(conn: &Connection, username: &str) -> Result<Option<Self>> {
+    |            ^^^^^^^^^^^^^^^^
+
+warning: function `get_token_info` is never used
+  --> src/ic/services/token.rs:10:14
+   |
+10 | pub async fn get_token_info(agent: &Agent, canister_id: &str) -> Result<DbTokenInfo> {
+   |              ^^^^^^^^^^^^^^
+
+warning: function `get_miner_info` is never used
+  --> src/ic/services/miner.rs:11:14
+   |
+11 | pub async fn get_miner_info(agent: &Agent, canister_id: &str) -> Result<(DbMinerInfo, Option<DbM...
+   |              ^^^^^^^^^^^^^^
+
+warning: function `get_mining_stats` is never used
+  --> src/ic/services/miner.rs:71:10
+   |
+71 | async fn get_mining_stats(agent: &Agent, canister_id: &str) -> Result<Option<DbMiningStats>> {
+   |          ^^^^^^^^^^^^^^^^
+
+warning: function `get_controllers` is never used
+  --> src/ic/services/module_hash.rs:38:14
+   |
+38 | pub async fn get_controllers(agent: &Agent, canister_id: &str) -> Result<Vec<String>> {
+   |              ^^^^^^^^^^^^^^^
+
+warning: function `get_canister_info` is never used
+  --> src/ic/services/module_hash.rs:89:14
+   |
+89 | pub async fn get_canister_info(agent: &Agent, canister_id: &str) -> Result<(String, Vec<String>)> {
+   |              ^^^^^^^^^^^^^^^^^
+
+warning: field `description` is never read
+  --> src/api/handlers/canister.rs:32:9
+   |
+30 | pub struct ModuleHashRequest {
+   |            ----------------- field in this struct
+31 |     pub hash: String,
+32 |     pub description: String,
+   |         ^^^^^^^^^^^
+
+warning: function `delete_canister` is never used
+   --> src/api/handlers/canister.rs:288:14
+    |
+288 | pub async fn delete_canister(
+    |              ^^^^^^^^^^^^^^^
+
+warning: function `get_all_module_hashes` is never used
+   --> src/api/handlers/canister.rs:334:14
+    |
+334 | pub async fn get_all_module_hashes(db_pool: web::Data<DbPool>) -> impl Responder {
+    |              ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `set_module_hash` is never used
+   --> src/api/handlers/canister.rs:339:14
+    |
+339 | pub async fn set_module_hash(
+    |              ^^^^^^^^^^^^^^^
+
+warning: function `add_verified_module_hash` is never used
+   --> src/api/handlers/canister.rs:418:14
+    |
+418 | pub async fn add_verified_module_hash(
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `remove_verified_module_hash` is never used
+   --> src/api/handlers/canister.rs:465:14
+    |
+465 | pub async fn remove_verified_module_hash(
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `is_valid_hex_hash` is never used
+   --> src/api/handlers/canister.rs:511:4
+    |
+511 | fn is_valid_hex_hash(hash: &str) -> bool {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `delete_token` is never used
+  --> src/api/handlers/token.rs:76:14
+   |
+76 | pub async fn delete_token(
+   |              ^^^^^^^^^^^^
+
+warning: function `delete_miner` is never used
+   --> src/api/handlers/miner.rs:155:14
+    |
+155 | pub async fn delete_miner(
+    |              ^^^^^^^^^^^^
+
+warning: associated function `new` is never used
+  --> src/api/middleware.rs:23:12
+   |
+22 | impl AdminAuth {
+   | -------------- associated function in this implementation
+23 |     pub fn new() -> Self {
+   |            ^^^
+
+warning: `https-outcall` (bin "https-outcall") generated 22 warnings (run `cargo fix --bin "https-outcall"` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.23s
+     Running `target/debug/https-outcall --host 127.0.0.1 --port 8080`
+[2025-03-10T16:52:53Z INFO  https_outcall] Starting ICP Canister Registry
+[2025-03-10T16:52:53Z INFO  https_outcall::db::pool] Initializing database connection pool at "data/registry.db"
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Initializing database schema
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::schema] Database schema initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall::db::pool] Database connection pool initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall] Database initialized successfully
+[2025-03-10T16:52:53Z INFO  https_outcall] Checked/created default admin account
+[2025-03-10T16:52:53Z INFO  https_outcall] Starting server on [::]:8080
+[2025-03-10T16:52:53Z INFO  actix_server::builder] starting 10 workers
+[2025-03-10T16:52:53Z INFO  actix_server::server] Actix runtime found; starting in Actix runtime
+[2025-03-10T16:52:53Z INFO  actix_server::server] starting service: "actix-web-service-[::]:8080", workers: 10, listening on: [::]:8080
+[2025-03-10T16:52:55Z INFO  https_outcall::api::handlers::system] API: Get system status
+[2025-03-10T16:52:55Z INFO  actix_web::middleware::logger] ::1 "GET /system/status HTTP/1.1" 200 183 "-" "curl/8.7.1" 0.000516
