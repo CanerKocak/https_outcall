@@ -11,6 +11,7 @@ The Internet Computer Protocol requires IPv6 connectivity for its canister HTTPS
 3. Automatically update canister information by calling their methods
 4. Offer a REST API for managing and querying the registry
 5. Run reliably as a system service
+6. Support HTTPS for secure communication
 
 ## Features
 
@@ -20,6 +21,8 @@ The Internet Computer Protocol requires IPv6 connectivity for its canister HTTPS
 - REST API for managing and querying the registry
 - Support for different canister types (tokens, miners, wallets)
 - Automatically starts on system boot via systemd service
+- HTTPS support with TLS/SSL for secure communication
+- WebSocket support for real-time updates
 
 ## Registry Features
 
@@ -29,6 +32,49 @@ The Internet Computer Protocol requires IPv6 connectivity for its canister HTTPS
 - **Module Hash Tracking**: Track module hashes for canisters
 - **Periodic Updates**: Automatically update canister information every minute
 - **Manual Refresh**: Trigger manual updates via API
+
+## HTTPS Configuration
+
+The server supports HTTPS for secure communication. There are two ways to configure HTTPS:
+
+### 1. Self-Signed Certificates (Development)
+
+For development or testing, you can generate self-signed certificates:
+
+```bash
+# Generate self-signed certificates
+./generate_cert.sh yourdomain.com
+
+# Update .env file
+USE_HTTPS=true
+SSL_CERT_PATH=certs/cert.pem
+SSL_KEY_PATH=certs/key.pem
+```
+
+### 2. Let's Encrypt Certificates (Production)
+
+For production use, you should use certificates from a trusted CA like Let's Encrypt:
+
+```bash
+# Set up Let's Encrypt certificates
+./setup_letsencrypt.sh yourdomain.com your@email.com
+```
+
+### 3. Using with DigitalOcean Load Balancer
+
+If you're using a DigitalOcean Load Balancer:
+
+1. Configure your load balancer to forward ports 80 and 443 to your server
+2. Set up SSL certificates in the DigitalOcean dashboard
+3. Configure your server to use HTTPS:
+   ```bash
+   # Update .env file
+   USE_HTTPS=true
+   SSL_CERT_PATH=certs/cert.pem
+   SSL_KEY_PATH=certs/key.pem
+   ```
+
+The server will automatically detect and use the HTTPS configuration if available.
 
 ## Local Development
 

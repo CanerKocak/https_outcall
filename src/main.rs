@@ -5,6 +5,11 @@ use std::path::Path;
 use env_logger::Env;
 use actix_cors::Cors;
 use dotenv::dotenv;
+use std::env;
+use std::fs::File;
+use rustls::{Certificate, PrivateKey, ServerConfig};
+use rustls_pemfile::{certs, pkcs8_private_keys};
+use std::io::{BufReader, Read};
 
 mod db;
 mod ic;
@@ -15,6 +20,42 @@ mod websocket_handler;
 mod canister_notifications;
 
 use db::models::admin::Admin;
+
+fn load_rustls_config() -> Result<ServerConfig, std::io::Error> {
+    // Check for environment variables for cert and key paths
+    let cert_path = env::var("SSL_CERT_PATH").unwrap_or_else(|_| "certs/cert.pem".to_string());
+    let key_path = env::var("SSL_KEY_PATH").unwrap_or_else(|_| "certs/key.pem".to_string());
+    
+    // Load certificate and private key files
+    let cert_file = File::open(cert_path)?;
+    let key_file = File::open(key_path)?;
+    
+    // Read certificate and private key data
+    let mut cert_reader = BufReader::new(cert_file);
+    let mut key_reader = BufReader::new(key_file);
+    
+    // Parse certificate and private key
+    let cert_chain = certs(&mut cert_reader)
+        .map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid certificate"))?
+        .into_iter()
+        .map(Certificate)
+        .collect();
+    
+    let mut keys: Vec<PrivateKey> = pkcs8_private_keys(&mut key_reader)
+        .map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid private key"))?
+        .into_iter()
+        .map(PrivateKey)
+        .collect();
+    
+    // Build TLS config
+    let config = ServerConfig::builder()
+        .with_safe_defaults()
+        .with_no_client_auth()
+        .with_single_cert(cert_chain, keys.remove(0))
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?;
+    
+    Ok(config)
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -59,10 +100,8 @@ async fn main() -> std::io::Result<()> {
     canister_notifications::start_cache_cleanup_task();
     api::handlers::claude::start_cache_cleanup_task();
     
-    // Start HTTP server
-    info!("Starting server on [::]:8080");
-    
-    HttpServer::new(move || {
+    // Create app factory
+    let app_factory = move || {
         // Configure CORS middleware
         let cors = Cors::default()
             .allow_any_origin()
@@ -118,8 +157,32 @@ async fn main() -> std::io::Result<()> {
                             .finish()
                     }))
             )
-    })
-    .bind(("::", 8080))?
-    .run()
-    .await
+    };
+    
+    // Check if we should use HTTPS
+    let use_https = env::var("USE_HTTPS").unwrap_or_else(|_| "false".to_string()) == "true";
+    
+    // Start HTTP server
+    let mut server = HttpServer::new(app_factory);
+    
+    if use_https {
+        // Try to load TLS config
+        match load_rustls_config() {
+            Ok(config) => {
+                info!("Starting HTTPS server on [::]:443 and HTTP server on [::]:80");
+                server = server.bind_rustls(("::", 443), config)?;
+                server = server.bind(("::", 80))?;
+            },
+            Err(e) => {
+                error!("Failed to load TLS configuration: {}. Falling back to HTTP only.", e);
+                info!("Starting HTTP server on [::]:8080");
+                server = server.bind(("::", 8080))?;
+            }
+        }
+    } else {
+        info!("Starting HTTP server on [::]:8080");
+        server = server.bind(("::", 8080))?;
+    }
+    
+    server.run().await
 }
