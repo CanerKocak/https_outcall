@@ -27,5 +27,6 @@ Cargo.lock
 # Environment variables
 .env
 
-# Private key for HTTPS
+# SSL-related files (now handled by DigitalOcean)
 certs/*
+ssl_backup/

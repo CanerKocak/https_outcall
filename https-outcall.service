@@ -11,9 +11,10 @@ Restart=on-failure
 RestartSec=5
 StartLimitBurst=3
 Environment=RUST_LOG=info
-Environment=USE_HTTPS=true
-Environment=SSL_CERT_PATH=/root/https_outcall/certs/cert.pem
-Environment=SSL_KEY_PATH=/root/https_outcall/certs/key.pem
+# SSL is now handled by DigitalOcean load balancer
+# Environment=USE_HTTPS=true
+# Environment=SSL_CERT_PATH=/root/https_outcall/certs/cert.pem
+# Environment=SSL_KEY_PATH=/root/https_outcall/certs/key.pem
 
 [Install]
 WantedBy=multi-user.target 

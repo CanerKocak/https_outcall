@@ -35,11 +35,11 @@ The Internet Computer Protocol requires IPv6 connectivity for its canister HTTPS
 
 ## HTTPS Configuration
 
-The server supports HTTPS for secure communication. There are two ways to configure HTTPS:
+The server supports HTTPS for secure communication. There are several ways to configure HTTPS:
 
-### 1. Self-Signed Certificates (Development)
+### 1. Self-Signed Certificates (Development Only)
 
-For development or testing, you can generate self-signed certificates:
+For local development or testing, you can generate self-signed certificates:
 
 ```bash
 # Generate self-signed certificates
@@ -47,32 +47,36 @@ For development or testing, you can generate self-signed certificates:
 
 # Update .env file
 USE_HTTPS=true
+LOCAL_DEV=true
 SSL_CERT_PATH=certs/cert.pem
 SSL_KEY_PATH=certs/key.pem
 ```
 
-### 2. Let's Encrypt Certificates (Production)
+### 2. DigitalOcean Load Balancer (Recommended for Production)
 
-For production use, you should use certificates from a trusted CA like Let's Encrypt:
+For production, the recommended approach is to use a DigitalOcean Load Balancer with managed SSL certificates:
+
+1. Create a load balancer in the DigitalOcean dashboard
+2. Configure your domain's DNS to point to the load balancer's IP address
+3. Enable SSL in the load balancer settings (DigitalOcean will handle certificate management)
+4. Configure forwarding rules to direct traffic to your server on port 8080
+5. Enable "Redirect HTTP to HTTPS" in the load balancer settings
+
+With this setup, you don't need to manage SSL certificates on your server - DigitalOcean handles all SSL termination at the load balancer level.
+
+### 3. Let's Encrypt Certificates (Alternative Production Option)
+
+If you're not using a load balancer, you can use certificates from Let's Encrypt:
 
 ```bash
 # Set up Let's Encrypt certificates
 ./setup_letsencrypt.sh yourdomain.com your@email.com
+
+# Update .env file
+USE_HTTPS=true
+SSL_CERT_PATH=/etc/letsencrypt/live/yourdomain.com/fullchain.pem
+SSL_KEY_PATH=/etc/letsencrypt/live/yourdomain.com/privkey.pem
 ```
-
-### 3. Using with DigitalOcean Load Balancer
-
-If you're using a DigitalOcean Load Balancer:
-
-1. Configure your load balancer to forward ports 80 and 443 to your server
-2. Set up SSL certificates in the DigitalOcean dashboard
-3. Configure your server to use HTTPS:
-   ```bash
-   # Update .env file
-   USE_HTTPS=true
-   SSL_CERT_PATH=certs/cert.pem
-   SSL_KEY_PATH=certs/key.pem
-   ```
 
 The server will automatically detect and use the HTTPS configuration if available.
 

@@ -22,37 +22,43 @@ mod canister_notifications;
 use db::models::admin::Admin;
 
 fn load_rustls_config() -> Result<ServerConfig, std::io::Error> {
-    // Check for environment variables for cert and key paths
+    // This function is now simplified since DigitalOcean handles SSL
+    // We'll keep a minimal version for local development
     let cert_path = env::var("SSL_CERT_PATH").unwrap_or_else(|_| "certs/cert.pem".to_string());
     let key_path = env::var("SSL_KEY_PATH").unwrap_or_else(|_| "certs/key.pem".to_string());
     
+    info!("Loading TLS configuration with cert_path: {}, key_path: {}", cert_path, key_path);
+    
     // Load certificate and private key files
-    let cert_file = File::open(cert_path)?;
-    let key_file = File::open(key_path)?;
+    let cert_file = File::open(&cert_path)?;
+    let key_file = File::open(&key_path)?;
     
     // Read certificate and private key data
     let mut cert_reader = BufReader::new(cert_file);
     let mut key_reader = BufReader::new(key_file);
     
-    // Parse certificate and private key
-    let cert_chain = certs(&mut cert_reader)
-        .map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid certificate"))?
+    // Parse certificate
+    let cert_chain: Vec<Certificate> = certs(&mut cert_reader)?
         .into_iter()
         .map(Certificate)
         .collect();
     
-    let mut keys: Vec<PrivateKey> = pkcs8_private_keys(&mut key_reader)
-        .map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid private key"))?
+    // Parse private key
+    let keys: Vec<PrivateKey> = pkcs8_private_keys(&mut key_reader)?
         .into_iter()
         .map(PrivateKey)
         .collect();
+    
+    if keys.is_empty() {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No private keys found"));
+    }
     
     // Build TLS config
     let config = ServerConfig::builder()
         .with_safe_defaults()
         .with_no_client_auth()
-        .with_single_cert(cert_chain, keys.remove(0))
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?;
+        .with_single_cert(cert_chain, keys[0].clone())
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e.to_string()))?;
     
     Ok(config)
 }
@@ -165,23 +171,23 @@ async fn main() -> std::io::Result<()> {
     // Start HTTP server
     let mut server = HttpServer::new(app_factory);
     
-    if use_https {
-        // Try to load TLS config
+    // For production with DigitalOcean load balancer, we only need to bind to port 8080
+    // The load balancer handles SSL termination
+    info!("Starting HTTP server on 0.0.0.0:8080");
+    server = server.bind("0.0.0.0:8080")?;
+    
+    // Optionally bind to other ports for local development
+    if use_https && env::var("LOCAL_DEV").unwrap_or_else(|_| "false".to_string()) == "true" {
         match load_rustls_config() {
             Ok(config) => {
-                info!("Starting HTTPS server on [::]:443 and HTTP server on [::]:80");
-                server = server.bind_rustls(("::", 443), config)?;
-                server = server.bind(("::", 80))?;
+                info!("Local development: Also binding to HTTPS on 0.0.0.0:443 and HTTP on 0.0.0.0:80");
+                server = server.bind_rustls("0.0.0.0:443", config)?;
+                server = server.bind("0.0.0.0:80")?;
             },
             Err(e) => {
-                error!("Failed to load TLS configuration: {}. Falling back to HTTP only.", e);
-                info!("Starting HTTP server on [::]:8080");
-                server = server.bind(("::", 8080))?;
+                error!("Failed to load TLS configuration for local development: {}", e);
             }
         }
-    } else {
-        info!("Starting HTTP server on [::]:8080");
-        server = server.bind(("::", 8080))?;
     }
     
     server.run().await
