@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to deploy the server to DigitalOcean
+# Script to deploy the server to DigitalOcean using git
 # Usage: ./deploy_ip_https.sh <server_ip> <load_balancer_ip>
 
 # Check if server IP is provided
@@ -13,19 +13,21 @@ fi
 SERVER_IP=$1
 LOAD_BALANCER_IP=${2:-""}
 
-# Build the project
-echo "Building the project..."
+# Build the project locally to make sure it compiles
+echo "Building the project locally to verify it compiles..."
 cargo build --release
 
-# Create remote directories
-echo "Creating remote directories..."
-ssh root@$SERVER_IP "mkdir -p /root/https_outcall"
+# Push changes to the remote repository
+echo "Pushing changes to the remote repository..."
+git push
 
-# Copy the updated binary and scripts
-echo "Copying files to server..."
-scp target/release/https-outcall root@$SERVER_IP:/root/https_outcall/
-scp .env root@$SERVER_IP:/root/https_outcall/
-scp https-outcall.service root@$SERVER_IP:/etc/systemd/system/
+# SSH into the server and pull the latest changes
+echo "Pulling latest changes on the server..."
+ssh root@$SERVER_IP "cd /root/https_outcall && git pull"
+
+# Build the project on the server
+echo "Building the project on the server..."
+ssh root@$SERVER_IP "cd /root/https_outcall && cargo build --release"
 
 # Reload systemd and restart the service
 echo "Reloading systemd and restarting the service..."
