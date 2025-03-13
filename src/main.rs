@@ -136,6 +136,13 @@ async fn main() -> std::io::Result<()> {
             // WebSocket status endpoint
             .service(web::resource("/ws-status").route(web::get().to(websocket_handler::websocket_status)))
             
+            // Health check endpoint for load balancer
+            .service(web::resource("/health").route(web::get().to(|_req: HttpRequest| async {
+                actix_web::HttpResponse::Ok()
+                    .content_type("application/json")
+                    .body(r#"{"status":"ok"}"#)
+            })))
+            
             // Canister notification endpoint
             .service(
                 web::resource("/miner-notifications")
@@ -146,7 +153,7 @@ async fn main() -> std::io::Result<()> {
             .service(fs::Files::new("/static", "./static").show_files_listing())
             
             // Serve WebSocket test page - fixed with proper type annotation
-            .service(web::resource("/test").route(web::get().guard(guard::Header("accept", "text/html")).to(
+            .service(web::resource("/test").route(web::get().to(
                 |_req: HttpRequest| async {
                     actix_web::HttpResponse::Ok()
                         .content_type("text/html; charset=utf-8")
