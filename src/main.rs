@@ -10,7 +10,6 @@ use std::fs::File;
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::io::{BufReader, Read};
-use actix_web::http::Protocol;
 
 mod db;
 mod ic;
@@ -181,10 +180,8 @@ async fn main() -> std::io::Result<()> {
     
     // For production with DigitalOcean load balancer, we only need to bind to port 8080
     // The load balancer handles SSL termination
-    info!("Starting HTTP server on 0.0.0.0:8080 with HTTP/2 and HTTP/1.1 support");
-    server = server.bind("0.0.0.0:8080")?
-        // Add support for both HTTP/2 and HTTP/1.1 protocols
-        .protocols(vec![Protocol::HTTP_2, Protocol::HTTP_11]);
+    info!("Starting HTTP server on 0.0.0.0:8080");
+    server = server.bind("0.0.0.0:8080")?;
     
     // Optionally bind to other ports for local development
     if use_https && env::var("LOCAL_DEV").unwrap_or_else(|_| "false".to_string()) == "true" {
