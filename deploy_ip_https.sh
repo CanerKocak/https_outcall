@@ -13,9 +13,13 @@ fi
 SERVER_IP=$1
 LOAD_BALANCER_IP=${2:-""}
 
-# Build the project locally to make sure it compiles
-echo "Building the project locally to verify it compiles..."
+# Build the project locally
+echo "Building the project locally..."
 cargo build --release
+
+# Copy the binary to the server
+echo "Copying binary to the server..."
+scp target/release/https-outcall root@$SERVER_IP:/root/https_outcall/target/release/
 
 # Push changes to the remote repository
 echo "Pushing changes to the remote repository..."
@@ -24,10 +28,6 @@ git push
 # SSH into the server and pull the latest changes
 echo "Pulling latest changes on the server..."
 ssh root@$SERVER_IP "cd /root/https_outcall && git pull"
-
-# Build the project on the server
-echo "Building the project on the server..."
-ssh root@$SERVER_IP "cd /root/https_outcall && cargo build --release"
 
 # Reload systemd and restart the service
 echo "Reloading systemd and restarting the service..."
