@@ -220,7 +220,7 @@ This application includes a WebSocket server that broadcasts mining events to co
    ```
 
 2. **Open the Test Page**:
-   Open your browser and navigate to `http://localhost:8080/test`
+   Open your browser and navigate to `http://localhost:8080/static/websocket_test.html`
 
 3. **Connect to WebSocket**:
    Click the "Connect" button on the test page to establish a WebSocket connection.
@@ -247,41 +247,31 @@ Miners can send notifications to the `/miner-notifications` endpoint with the fo
     "token_id": "aaaaa-bbbbb-ccccc-ddddd-eeeee",
     "block_height": 12345,
     "nonce": 67890,
-    "hash": "000000ff00000000000000000000000000000000000000000000000000000000",
-    "difficulty": 12345678,
-    "reward": 50
+    "hash": "000000ff00000000000000000000000000000000000000000000000000000000"
   }
 }
 ```
 
-The API requires an `X-API-Key` header for authentication.
+## Notification System Architecture
 
-### WebSocket Protocol
+The system is designed to be efficient by using a real-time notification approach rather than constant polling:
 
-Clients connect to the WebSocket endpoint at `/ws`. The server sends JSON messages with the following structure:
+1. **Event-Driven Updates**: When a miner sends a notification (e.g., mining starts or a solution is found), the system immediately processes it and updates the relevant token information.
 
-```json
-{
-  "event": "solution_found",
-  "data": {
-    "token_id": "aaaaa-bbbbb-ccccc-ddddd-eeeee",
-    "block_height": 12345,
-    "nonce": 67890,
-    "hash": "000000ff00000000000000000000000000000000000000000000000000000000",
-    "difficulty": 12345678,
-    "reward": 50
-  },
-  "timestamp": 1646456789000
-}
-```
+2. **Deduplication Cache**: The system maintains a cache to prevent processing duplicate notifications, which is especially important in the IC environment where notifications might be retried.
 
-### Handling Duplicate Notifications
+3. **Asynchronous Processing**: Updates are processed asynchronously to ensure the API remains responsive even during high load.
 
-The Internet Computer may send the same notification multiple times due to its consensus mechanism. Our server handles this by:
+4. **WebSocket Broadcasting**: All events are broadcast to connected WebSocket clients, enabling real-time updates in frontend applications.
 
-1. Creating a unique cache key for each notification based on miner ID, timestamp, and event type
-2. Storing the response in a cache with a 5-minute expiration
-3. Returning the cached response for duplicate notifications
-4. Only processing and broadcasting the event the first time it's received
+5. **Fallback Scheduler**: A background scheduler runs every minute to update any information that might have been missed, but the primary update mechanism is through notifications.
 
-This ensures that even if a notification is received multiple times, it will only be broadcast to WebSocket clients once.
+### Notification Event Types
+
+The system supports the following notification event types:
+
+- `token_connected`: When a miner connects to a token
+- `mining_started`: When a miner starts mining a new block
+- `solution_found`: When a miner finds a solution
+- `mining_stopped`: When a miner stops mining
+

@@ -15,10 +15,11 @@ const CANISTER_API_URL = 'http://134.209.193.115:8080';
 export async function registerCanister(
   principal: string,
   canisterId: string,
-  canisterType: 'token_backend' | 'miner'
+  canisterType: 'token_backend' | 'miner' | 'ledger'
 ): Promise<any> {
   try {
     // Map token_backend to token for the API
+    // ledger type is for ICRC tokens
     const apiCanisterType = canisterType === 'token_backend' ? 'token' : canisterType;
     
     const response = await fetch(`${CANISTER_API_URL}/canisters`, {

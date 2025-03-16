@@ -162,4 +162,9 @@ impl Admin {
         
         Ok(())
     }
+    
+    pub fn check_or_create_default(conn: &Connection) -> Result<(), anyhow::Error> {
+        // Use the existing method with default credentials
+        Self::create_admin_if_none_exists(conn, "admin", "admin123")
+    }
 } 

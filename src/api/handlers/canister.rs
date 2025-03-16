@@ -61,6 +61,49 @@ pub async fn get_all_canisters(db_pool: web::Data<DbPool>) -> impl Responder {
     }
 }
 
+/// Get canisters by type
+pub async fn get_canisters_by_type(db_pool: web::Data<DbPool>, path: web::Path<String>) -> impl Responder {
+    let canister_type = path.into_inner();
+    info!("API: Get canisters by type: {}", canister_type);
+    
+    let conn = match db_pool.get() {
+        Ok(conn) => conn,
+        Err(e) => {
+            error!("Failed to get database connection: {}", e);
+            return HttpResponse::InternalServerError().json(
+                ApiResponse::<Vec<Canister>>::error(&format!("Database error: {}", e))
+            );
+        }
+    };
+    
+    // Convert string to CanisterType
+    let canister_type_enum = match canister_type.to_lowercase().as_str() {
+        "token" => CanisterType::Token,
+        "miner" => CanisterType::Miner,
+        "wallet" => CanisterType::Wallet,
+        "ledger" => CanisterType::Ledger,
+        _ => {
+            return HttpResponse::BadRequest().json(
+                ApiResponse::<Vec<Canister>>::error(&format!("Invalid canister type: {}", canister_type))
+            );
+        }
+    };
+    
+    match Canister::find_by_type(&conn, &canister_type_enum) {
+        Ok(canisters) => {
+            HttpResponse::Ok().json(
+                ApiResponse::success(canisters, &format!("Canisters of type '{}' retrieved successfully", canister_type))
+            )
+        },
+        Err(e) => {
+            error!("Failed to get canisters by type: {}", e);
+            HttpResponse::InternalServerError().json(
+                ApiResponse::<Vec<Canister>>::error(&format!("Failed to get canisters by type: {}", e))
+            )
+        }
+    }
+}
+
 /// Register a new canister
 pub async fn register_canister(
     db_pool: web::Data<DbPool>,
@@ -99,6 +142,7 @@ pub async fn register_canister(
         "token" => CanisterType::Token,
         "miner" => CanisterType::Miner,
         "wallet" => CanisterType::Wallet,
+        "ledger" => CanisterType::Ledger,
         _ => {
             return HttpResponse::BadRequest().json(
                 ApiResponse::<Canister>::error(&format!("Invalid canister type: {}", request.canister_type))
@@ -258,6 +302,7 @@ pub async fn update_canister(
             "token" => CanisterType::Token,
             "miner" => CanisterType::Miner,
             "wallet" => CanisterType::Wallet,
+            "ledger" => CanisterType::Ledger,
             _ => {
                 return HttpResponse::BadRequest().json(
                     ApiResponse::<Canister>::error(&format!("Invalid canister type: {}", canister_type))

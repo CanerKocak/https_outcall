@@ -6,6 +6,10 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::websocket;
+use crate::db::DbPool;
+use crate::ic::agent::create_agent;
+use crate::ic::services::token::get_token_all_info;
+use crate::db::models::canister::{Canister, CanisterType};
 
 // Structure for canister notifications
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -34,6 +38,17 @@ pub async fn handle_canister_notification(
     req: HttpRequest, 
     data: web::Json<NotificationData>
 ) -> HttpResponse {
+    // Extract db_pool from app_data
+    let db_pool = match req.app_data::<web::Data<DbPool>>() {
+        Some(pool) => pool.clone(),
+        None => {
+            log::error!("Failed to get database pool from app_data");
+            return HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Internal server error"
+            }));
+        }
+    };
+
     // Extract API key from headers for authentication
     let api_key = req.headers()
         .get("X-API-Key")
@@ -97,6 +112,23 @@ pub async fn handle_canister_notification(
         "token_connected" => {
             // Handle token connection event
             log::info!("Miner {} connected to token", canister_id);
+            
+            // Extract token canister ID from data if available
+            if let Some(token_id) = data.data.get("token_id").and_then(|v| v.as_str()) {
+                log::info!("Updating token info for: {}", token_id);
+                
+                // Update token info in the background
+                let db_pool_clone = db_pool.clone();
+                let token_id_clone = token_id.to_string();
+                
+                actix_web::rt::spawn(async move {
+                    match update_token_info(&db_pool_clone, &token_id_clone).await {
+                        Ok(_) => log::info!("Successfully updated token info for: {}", token_id_clone),
+                        Err(e) => log::error!("Failed to update token info for {}: {}", token_id_clone, e),
+                    }
+                });
+            }
+            
             websocket::broadcast_notification(&event_type, data.data.clone());
         },
         "mining_started" => {
@@ -107,6 +139,23 @@ pub async fn handle_canister_notification(
         "solution_found" => {
             // Handle solution found event
             log::info!("Miner {} found solution", canister_id);
+            
+            // Extract token canister ID from data if available
+            if let Some(token_id) = data.data.get("token_id").and_then(|v| v.as_str()) {
+                log::info!("Updating token info for: {}", token_id);
+                
+                // Update token info in the background
+                let db_pool_clone = db_pool.clone();
+                let token_id_clone = token_id.to_string();
+                
+                actix_web::rt::spawn(async move {
+                    match update_token_info(&db_pool_clone, &token_id_clone).await {
+                        Ok(_) => log::info!("Successfully updated token info for: {}", token_id_clone),
+                        Err(e) => log::error!("Failed to update token info for {}: {}", token_id_clone, e),
+                    }
+                });
+            }
+            
             websocket::broadcast_notification(&event_type, data.data.clone());
         },
         _ => {
@@ -147,4 +196,34 @@ pub fn start_cache_cleanup_task() {
             clean_expired_cache_entries();
         }
     });
-} 
+}
+
+// Helper function to update token info
+async fn update_token_info(db_pool: &web::Data<DbPool>, token_id: &str) -> Result<(), anyhow::Error> {
+    // Get a database connection
+    let conn = db_pool.get()?;
+    
+    // Check if the token exists in our registry
+    match Canister::find_by_canister_id(&conn, token_id)? {
+        Some(canister) if canister.canister_type == CanisterType::Token => {
+            // Create an IC agent
+            let agent = create_agent("https://ic0.app").await?;
+            
+            // Get token info
+            let token_info = get_token_all_info(&agent, token_id).await?;
+            
+            // Save the token info
+            token_info.save(&conn)?;
+            
+            Ok(())
+        },
+        Some(_) => {
+            log::warn!("Canister {} is not registered as a token", token_id);
+            Ok(())
+        },
+        None => {
+            log::warn!("Token canister {} not found in registry", token_id);
+            Ok(())
+        }
+    }
+}

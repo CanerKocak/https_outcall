@@ -27,8 +27,10 @@ r2d2_sqlite = "0.22"
 # sqlx removed to avoid conflicts
 
 # Internet Computer
-ic-agent = "0.30"
+ic-agent = { version = "0.30", features = ["pem"] }
 candid = "0.9"
+pem = "1.1"
+ring = "0.16"
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }

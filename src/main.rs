@@ -1,6 +1,6 @@
-use actix_web::{web, App, HttpServer, middleware, guard, HttpRequest};
+use actix_web::{web, App, HttpServer, middleware, HttpRequest};
 use actix_files as fs;
-use log::{info, error};
+use log::{info, error, warn};
 use std::path::Path;
 use env_logger::Env;
 use actix_cors::Cors;
@@ -9,12 +9,12 @@ use std::env;
 use std::fs::File;
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
-use std::io::{BufReader, Read};
+use std::io::BufReader;
 
 mod db;
 mod ic;
 mod api;
-// mod jobs; // Commented out since we're using WebSockets instead
+mod jobs;
 mod websocket;
 mod websocket_handler;
 mod canister_notifications;
@@ -85,10 +85,10 @@ async fn main() -> std::io::Result<()> {
         }
     };
     
-    // Create default admin account if none exists
+    // Check if we need to create a default admin account
     match db_pool.get() {
         Ok(conn) => {
-            if let Err(e) = Admin::create_admin_if_none_exists(&conn, "admin", "admin123") {
+            if let Err(e) = Admin::check_or_create_default(&conn) {
                 error!("Failed to create default admin: {}", e);
             } else {
                 info!("Checked/created default admin account");
@@ -98,6 +98,16 @@ async fn main() -> std::io::Result<()> {
             error!("Failed to get database connection: {}", e);
         }
     }
+    
+    // Initialize the identity system
+    match ic::agent::init_identity() {
+        Ok(path) => info!("Identity initialized successfully at: {}", path),
+        Err(e) => warn!("Failed to initialize identity: {}. Will use anonymous identity when needed.", e)
+    }
+    
+    // Start the background job scheduler
+    jobs::start_scheduler(std::sync::Arc::new(db_pool.clone())).await;
+    info!("Started background job scheduler");
     
     // Initialize WebSocket server
     let websocket_server = websocket::init_websocket_server();

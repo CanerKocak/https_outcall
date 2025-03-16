@@ -33,8 +33,35 @@ pub struct TokenInfo {
 }
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct TokenAllInfo {
+    pub name: String,
+    pub ticker: String,
+    pub total_supply: u64,
+    pub ledger_id: Option<Principal>,
+    pub logo: Option<String>,
+    pub decimals: u8,
+    pub transfer_fee: u64,
+    pub social_links: Option<Vec<SocialLink>>,
+    pub average_block_time: Option<f64>,
+    pub formatted_block_time: Option<String>,
+    pub block_time_rating: Option<String>,
+    pub circulating_supply: u64,
+    pub mining_progress_percentage: String,
+    pub current_block_reward: u64,
+    pub formatted_block_reward: String,
+    pub principal: Principal,
+    pub current_block_height: u64,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 pub enum Result {
     Ok(TokenInfo),
+    Err(String),
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub enum AllInfoResult {
+    Ok(TokenAllInfo),
     Err(String),
 }
 
@@ -70,8 +97,31 @@ pub fn token_interface() -> candid::IDLValue {
       total_supply : nat64;
       social_links : opt vec SocialLink;
     };
+    type TokenAllInfo = record {
+      name : text;
+      ticker : text;
+      total_supply : nat64;
+      ledger_id : opt principal;
+      logo : opt text;
+      decimals : nat8;
+      transfer_fee : nat64;
+      social_links : opt vec SocialLink;
+      average_block_time : opt float64;
+      formatted_block_time : opt text;
+      block_time_rating : opt text;
+      circulating_supply : nat64;
+      mining_progress_percentage : text;
+      current_block_reward : nat64;
+      formatted_block_reward : text;
+      principal : principal;
+      current_block_height : nat64;
+    };
+    type AllInfoResult = variant {
+      Ok : TokenAllInfo;
+      Err : text;
+    };
     service : {
-      get_info : () -> (Result) query;
+      get_all_info : () -> (AllInfoResult) query;
     }
     "#.to_string())
-} 
+}

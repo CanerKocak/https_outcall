@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::db::DbPool;
 use crate::db::models::canister::{Canister, CanisterType};
 use crate::ic::agent::create_agent;
-use crate::ic::services::token::get_token_info;
+use crate::ic::services::token::get_token_all_info;
 
 /// Run the update tokens task
 pub async fn run(db_pool: Arc<DbPool>) -> Result<()> {
@@ -28,7 +28,7 @@ pub async fn run(db_pool: Arc<DbPool>) -> Result<()> {
     for canister in token_canisters {
         info!("Updating token canister: {}", canister.canister_id);
         
-        match get_token_info(&agent, &canister.canister_id).await {
+        match get_token_all_info(&agent, &canister.canister_id).await {
             Ok(token_info) => {
                 // Save the token info
                 token_info.save(&conn).context("Failed to save token info")?;
@@ -42,4 +42,4 @@ pub async fn run(db_pool: Arc<DbPool>) -> Result<()> {
     
     info!("Update tokens task completed");
     Ok(())
-} 
+}

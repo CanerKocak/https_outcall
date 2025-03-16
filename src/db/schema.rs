@@ -31,6 +31,14 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             logo TEXT,
             last_updated INTEGER NOT NULL,
             raw_info TEXT NOT NULL,
+            average_block_time REAL,
+            formatted_block_time TEXT,
+            block_time_rating TEXT,
+            circulating_supply INTEGER NOT NULL DEFAULT 0,
+            mining_progress_percentage TEXT NOT NULL DEFAULT '0',
+            current_block_reward INTEGER NOT NULL DEFAULT 0,
+            formatted_block_reward TEXT NOT NULL DEFAULT '0',
+            current_block_height INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (canister_id) REFERENCES canisters (canister_id)
         )",
         [],
@@ -111,4 +119,4 @@ pub fn init_db(conn: &Connection) -> Result<()> {
     
     info!("Database schema initialized successfully");
     Ok(())
-} 
+}

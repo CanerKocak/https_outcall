@@ -8,6 +8,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         web::scope("/canisters")
             .route("", web::get().to(canister::get_all_canisters))
             .route("", web::post().to(canister::register_canister))
+            .route("/type/{canister_type}", web::get().to(canister::get_canisters_by_type))
             .route("/{canister_id}", web::get().to(canister::get_canister))
             .route("/{canister_id}", web::put().to(canister::update_canister))
     );

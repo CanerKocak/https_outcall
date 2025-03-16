@@ -3,11 +3,12 @@ use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 use chrono::Utc;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum CanisterType {
     Token,
     Miner,
     Wallet,
+    Ledger,
 }
 
 impl ToString for CanisterType {
@@ -16,6 +17,7 @@ impl ToString for CanisterType {
             CanisterType::Token => "token".to_string(),
             CanisterType::Miner => "miner".to_string(),
             CanisterType::Wallet => "wallet".to_string(),
+            CanisterType::Ledger => "ledger".to_string(),
         }
     }
 }
@@ -28,6 +30,7 @@ impl TryFrom<String> for CanisterType {
             "token" => Ok(CanisterType::Token),
             "miner" => Ok(CanisterType::Miner),
             "wallet" => Ok(CanisterType::Wallet),
+            "ledger" => Ok(CanisterType::Ledger),
             _ => Err(anyhow::anyhow!("Invalid canister type: {}", s)),
         }
     }
